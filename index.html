@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHL +EV Betting Finder</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏒 NHL +EV Betting Finder</h1>
+            <p class="subtitle">Conservative Mode: Moneylines + Totals Only</p>
+        </header>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading analysis...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <p>⚠️ Could not load analysis data. Make sure latest_analysis.json is available.</p>
+        </div>
+
+        <div id="content" style="display: none;">
+            <!-- Summary Stats -->
+            <section class="summary-card">
+                <h2>Analysis Summary</h2>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <span class="stat-label">Last Updated</span>
+                        <span class="stat-value" id="timestamp">-</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Games Analyzed</span>
+                        <span class="stat-value" id="games-analyzed">-</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">+EV Bets Found</span>
+                        <span class="stat-value" id="bets-found">-</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Expected ROI</span>
+                        <span class="stat-value" id="expected-roi">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recommendations -->
+            <section class="recommendations">
+                <h2>Top Betting Recommendations</h2>
+                <div class="grade-legend">
+                    <span class="grade-item"><span class="grade grade-a">A</span> 7%+ exceptional</span>
+                    <span class="grade-item"><span class="grade grade-b-plus">B+</span> 4-7% very good</span>
+                    <span class="grade-item"><span class="grade grade-b">B</span> 3-4% solid</span>
+                    <span class="grade-item"><span class="grade grade-c-plus">C+</span> 2-3% playable</span>
+                </div>
+                <div id="recommendations-list"></div>
+            </section>
+
+            <!-- Game Analysis -->
+            <section class="game-analysis">
+                <h2>Game-by-Game Analysis</h2>
+                <div id="games-list"></div>
+            </section>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
