@@ -21,6 +21,27 @@ header {
     text-align: center;
     color: white;
     margin-bottom: 30px;
+    position: relative;
+}
+
+.header-nav {
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.back-link {
+    color: white;
+    text-decoration: none;
+    font-size: 0.95rem;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: inline-block;
+    transition: background 0.2s;
+}
+
+.back-link:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 header h1 {
