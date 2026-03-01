@@ -18,6 +18,10 @@ cache/
 # Analysis output
 latest_analysis.json
 
+# ML Models
+ml_models/
+*.pkl
+
 # OS
 .DS_Store
 .DS_Store?

@@ -57,13 +57,13 @@ def evaluate_all_bets(
     min_edge: float = 0.02,  # Minimum 2% edge to recommend
     min_confidence: float = 0.3,
     conservative: bool = False,
-    max_edge: float = 0.15,  # Cap: edges above 15% are likely model errors
+    max_edge: float = 1.0,  # No practical cap - show all edges
 ) -> list:
     """
     Evaluate all possible bets for a single game.
     Returns list of bet recommendations sorted by EV.
 
-    conservative mode: only totals and moneylines, higher min edge, cap unrealistic edges
+    conservative mode: only totals and moneylines, higher min edge
     """
     bets = []
     confidence = blended_probs.get("model_confidence", 0)
@@ -245,7 +245,7 @@ def _evaluate_thescore_odds(
     return bets
 
 
-def format_recommendations(all_bets: list, top_n: int = 15) -> str:
+def format_recommendations(all_bets: list, top_n: int = 15, quota_info: dict = None) -> str:
     """
     Format the top bet recommendations into a readable report.
     """
@@ -304,6 +304,16 @@ def format_recommendations(all_bets: list, top_n: int = 15) -> str:
     lines.append("")
     lines.append("  Bet $0.50-$1.00 CAD per pick for optimal bankroll management.")
     lines.append("")
+    
+    # Add API quota info if available
+    if quota_info:
+        lines.append("-" * 75)
+        lines.append("  ODDS API QUOTA")
+        lines.append(f"  Requests used this month: {quota_info['used']}")
+        lines.append(f"  Requests remaining: {quota_info['remaining']}")
+        lines.append(f"  Last request cost: {quota_info['last_cost']} credit(s)")
+        lines.append("=" * 75)
+        lines.append("")
 
     return "\n".join(lines)
 

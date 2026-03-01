@@ -62,10 +62,10 @@ def _cache_key(name: str) -> str:
     return f"odds_{name}_{datetime.now().strftime('%Y%m%d_%H')}"
 
 
-def fetch_nhl_odds(markets: str = MARKETS) -> list:
+def fetch_nhl_odds(markets: str = MARKETS):
     """
     Fetch current NHL odds for all available games.
-    Returns list of game dicts with odds from multiple bookmakers.
+    Returns tuple of (games, quota_info).
     """
     api_key = get_api_key()
 
@@ -74,7 +74,8 @@ def fetch_nhl_odds(markets: str = MARKETS) -> list:
     if cached_path.exists():
         age = time.time() - cached_path.stat().st_mtime
         if age < 1800:  # 30 min cache for odds
-            return json.loads(cached_path.read_text())
+            # Return cached data with no quota info
+            return json.loads(cached_path.read_text()), None
 
     url = f"{ODDS_API_BASE}/sports/icehockey_nhl/odds"
     params = {
@@ -91,10 +92,19 @@ def fetch_nhl_odds(markets: str = MARKETS) -> list:
     # Log remaining requests
     remaining = resp.headers.get("x-requests-remaining", "?")
     used = resp.headers.get("x-requests-used", "?")
+    last_cost = resp.headers.get("x-requests-last", "?")
     print(f"  Odds API: {used} requests used, {remaining} remaining this month")
 
     cached_path.write_text(json.dumps(games, default=str))
-    return games
+    
+    # Store quota info in the response for later use
+    quota_info = {
+        "remaining": remaining,
+        "used": used,
+        "last_cost": last_cost,
+    }
+    
+    return games, quota_info
 
 
 def parse_odds(games: list) -> list:

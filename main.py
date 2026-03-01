@@ -50,6 +50,9 @@ from ev_calculator import (
     kelly_criterion,
     calculate_ev,
 )
+from ml_model import NHLMLModel, blend_ml_and_similarity
+from ml_model_enhanced import EnhancedNHLMLModel
+from scraper import get_player_data_nhl_api_only
 
 
 def run_analysis(
@@ -64,7 +67,7 @@ def run_analysis(
     print("=" * 60)
     print("  NHL +EV Betting Finder")
     if conservative:
-        print("  MODE: Conservative (moneylines + totals only, 3%+ edge, capped at 15%)")
+        print("  MODE: Conservative (moneylines + totals only, 3%+ edge)")
     print(f"  {datetime.now().strftime('%A, %B %d %Y %H:%M')}")
     print("=" * 60)
     print()
@@ -84,13 +87,23 @@ def run_analysis(
     team_forms = {}
     for team in standings:
         team_forms[team] = get_team_recent_form(team, all_games, n=10)
+    
+    # Step 3.5: Train/load ML model
+    print("\n[3.5/5] Initializing Enhanced ML model (with player data)...")
+    ml_model = EnhancedNHLMLModel()
+    if not ml_model.load_models():
+        print("  Training new ML model...")
+        ml_model.train(all_games, standings, team_forms)
+    else:
+        print("  Loaded pre-trained ML model")
 
     # Step 4: Fetch odds (if enabled)
     odds_games = []
+    quota_info = None
     if use_odds:
         print("\n[4/5] Fetching live betting odds...")
         try:
-            raw_odds = fetch_nhl_odds()
+            raw_odds, quota_info = fetch_nhl_odds()
             odds_games = parse_odds(raw_odds)
             # Filter to today's games only (commence_time is UTC, we're EST/UTC-5)
             # Include today and tomorrow UTC to catch evening EST games
@@ -155,11 +168,20 @@ def run_analysis(
             print(f"    Found {len(similar)} similar historical games")
 
             # Get total and spread lines from odds
+            # Prioritize theScore Bet lines, fallback to best odds
             total_line = None
             spread_line = None
-            if best_odds["total"]["over"]:
+            
+            # Try to get theScore lines first
+            thescore_odds = best_odds.get("all_books", {}).get("thescore", {})
+            if thescore_odds.get("total_over"):
+                total_line = thescore_odds["total_over"]["point"]
+            elif best_odds["total"]["over"]:
                 total_line = best_odds["total"]["over"]["point"]
-            if best_odds["spread"]["home"]:
+            
+            if thescore_odds.get("spread_home"):
+                spread_line = thescore_odds["spread_home"]["point"]
+            elif best_odds["spread"]["home"]:
                 spread_line = best_odds["spread"]["home"]["point"]
 
             # Estimate true probabilities from similar games
@@ -168,20 +190,59 @@ def run_analysis(
                 total_line=total_line,
                 spread_line=spread_line,
             )
+            
+            # Get ML predictions and blend with similarity model
+            # Fetch player data (rest days, back-to-back, etc.)
+            game_date = game_data["commence_time"][:10]
+            player_data = get_player_data_nhl_api_only(home, away, game_date)
+            
+            home_stats_blend = {**standings[home], **{"win_pct": standings[home].get("win_pct", 0.5)}}
+            away_stats_blend = {**standings[away], **{"win_pct": standings[away].get("win_pct", 0.5)}}
+            
+            # Try enhanced prediction with player data first
+            ml_pred = ml_model.predict_with_players(
+                home_stats_blend, away_stats_blend, 
+                team_forms[home], team_forms[away],
+                player_data
+            )
+            
+            if ml_pred:
+                # Blend ML with similarity model (60% similarity, 40% ML)
+                model_probs_enhanced = blend_ml_and_similarity(ml_pred, model_probs, ml_weight=0.4)
+                model_probs["home_win_prob"] = model_probs_enhanced["home_win_prob"]
+                model_probs["away_win_prob"] = model_probs_enhanced["away_win_prob"]
+                model_probs["expected_total"] = model_probs_enhanced["expected_total"]
+                
+                # Add player context indicators
+                player_indicators = []
+                if player_data.get('home_back_to_back'):
+                    player_indicators.append(f"{home} B2B")
+                if player_data.get('away_back_to_back'):
+                    player_indicators.append(f"{away} B2B")
+                if player_data.get('home_rest_days', 1) >= 3:
+                    player_indicators.append(f"{home} well-rested")
+                if player_data.get('away_rest_days', 1) >= 3:
+                    player_indicators.append(f"{away} well-rested")
+                
+                player_context = f" [{', '.join(player_indicators)}]" if player_indicators else ""
+            else:
+                player_context = ""
 
             # Blend model with market
             blended = blend_model_and_market(model_probs, market_probs)
 
             # Print analysis
-            print(f"    Model: {home} {model_probs['home_win_prob']:.1%} / "
+            line_source = "theScore" if thescore_odds.get("total_over") else "best available"
+            ml_indicator = " (ML+Player)" if ml_pred and ml_pred.get('used_player_data') else " (ML-enhanced)" if ml_pred else ""
+            print(f"    Model{ml_indicator}: {home} {model_probs['home_win_prob']:.1%} / "
                   f"{away} {model_probs['away_win_prob']:.1%} "
-                  f"(confidence: {model_probs['confidence']:.0%})")
+                  f"(confidence: {model_probs['confidence']:.0%}){player_context}")
             print(f"    Market: {home} {market_probs['home_win_prob']:.1%} / "
                   f"{away} {market_probs['away_win_prob']:.1%}")
             print(f"    Blended: {home} {blended['home_win_prob']:.1%} / "
                   f"{away} {blended['away_win_prob']:.1%}")
             if total_line:
-                print(f"    Total: line {total_line}, model expects "
+                print(f"    Total: line {total_line} ({line_source}), model expects "
                       f"{model_probs['expected_total']:.1f} goals "
                       f"(O {blended['over_prob']:.1%} / U {blended['under_prob']:.1%})")
 
@@ -248,7 +309,7 @@ def run_analysis(
 
     # Print recommendations
     print("\n")
-    report = format_recommendations(all_bets, top_n=15)
+    report = format_recommendations(all_bets, top_n=15, quota_info=quota_info)
     print(report)
 
     # Save results

@@ -73,6 +73,8 @@ A clean, modern web interface for displaying NHL betting analysis and +EV recomm
 - ✅ Auto-refresh every 5 minutes
 - ✅ Summary statistics dashboard
 
+./build_and_deploy.sh
+
 ## Updating the Data
 
 To update the betting analysis:
@@ -142,3 +144,48 @@ To add this to your existing Firebase project hub:
 **Data not updating**
 - Run `python3 main.py --stake 0.50 --conservative` to generate fresh data
 - Copy the new `latest_analysis.json` to your web directory
+
+## Daily Usage Cheat Sheet
+
+### Run analysis only (terminal output):
+```bash
+cd ~/Desktop/nhllines
+source venv/bin/activate
+python3 main.py --stake 0.50 --conservative
+```
+
+### Run analysis AND deploy to live site (one command):
+```bash
+cd ~/Desktop/nhllines
+source venv/bin/activate
+./update_and_deploy.sh
+```
+Site goes live at: https://projects-brawlstars.web.app/nhllines/
+
+### All available flags:
+```
+--stake 0.50         Set bet size in CAD (default: $1.00)
+--conservative       Totals + moneylines only, 3%+ edge minimum, caps unrealistic edges at 15%
+--days 120           Historical lookback in days (default: 90)
+--min-edge 0.03      Minimum edge to show (default: 0.02 = 2%)
+--no-odds            Run without live odds (no API key needed, model-only mode)
+--similar 50         Number of similar games to compare against (default: 50)
+```
+
+### Edge grades explained:
+| Grade | Edge | Meaning |
+|-------|------|---------|
+| A | 7%+ | Exceptional — rare, verify before betting |
+| B+ | 4-7% | Very good |
+| B | 3-4% | Solid — sharp bettor territory |
+| C+ | 2-3% | Thin but playable at volume |
+| >15% | — | Likely model error, auto-filtered out in conservative mode |
+
+### How the model works:
+1. Pulls last 90 days of NHL game results from the free NHL API
+2. Fetches live moneyline, spread, and o/u odds from The Odds API (includes theScore Bet and other Ontario books)
+3. For each game, finds ~50 similar historical matchups based on team quality, offense/defense strength, and head-to-head
+4. Estimates "true" probabilities from those similar games
+5. Blends model probabilities with market consensus (35% model / 65% market, scaled by confidence)
+6. Compares blended probability to the bookmaker's implied probability — any gap above the minimum edge threshold gets flagged as a +EV bet
+7. All bets are straights (no parlays) — the strategy relies on grinding small edges over volume with $0.50-$1.00 stakes
