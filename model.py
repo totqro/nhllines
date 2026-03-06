@@ -312,19 +312,22 @@ def _goal_distribution(totals: list) -> dict:
 def blend_model_and_market(
     model_probs: dict,
     market_probs: dict,
-    model_weight: float = 0.35,
+    model_weight: float = 0.40,  # Increased from 0.35 - trust our model more
 ) -> dict:
     """
     Blend our model's probabilities with market consensus.
     Market is generally efficient, so we only deviate when our model
     has high confidence and disagrees.
 
+    OPTIMIZED: Increased model weight and improved confidence scaling.
+    
     model_weight: how much to trust our model vs market (0-1)
     Higher confidence -> trust model more.
     """
     confidence = model_probs.get("confidence", 0)
-    # Scale model weight by confidence
-    effective_weight = model_weight * confidence
+    # Scale model weight by confidence with better curve
+    # Use sqrt to give more weight at medium-high confidence
+    effective_weight = model_weight * math.sqrt(confidence)
 
     blended = {}
 
@@ -342,10 +345,11 @@ def blend_model_and_market(
     )
     blended["under_prob"] = 1 - blended["over_prob"]
 
-    # Spread
+    # Spread - use lower weight since spreads are harder
+    spread_weight = effective_weight * 0.7
     blended["home_cover_prob"] = (
-        effective_weight * model_probs.get("home_cover_prob", 0.5) +
-        (1 - effective_weight) * market_probs.get("spread_home_cover_prob", 0.5)
+        spread_weight * model_probs.get("home_cover_prob", 0.5) +
+        (1 - spread_weight) * market_probs.get("spread_home_cover_prob", 0.5)
     )
     blended["away_cover_prob"] = 1 - blended["home_cover_prob"]
 

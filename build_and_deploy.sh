@@ -19,6 +19,16 @@ fi
 echo ""
 echo "[2/5] Copying to projects/public/nhllines..."
 cp latest_analysis.json ~/Desktop/projects/public/nhllines/
+cp index.html ~/Desktop/projects/public/nhllines/
+cp styles.css ~/Desktop/projects/public/nhllines/
+cp app.js ~/Desktop/projects/public/nhllines/
+# Copy performance data if it exists
+if [ -f bet_results.json ]; then
+    cp bet_results.json ~/Desktop/projects/public/nhllines/
+fi
+if [ -f analysis_history.json ]; then
+    cp analysis_history.json ~/Desktop/projects/public/nhllines/
+fi
 
 # Step 3: Build React app
 echo ""

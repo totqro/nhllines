@@ -51,8 +51,14 @@ from ev_calculator import (
     calculate_ev,
 )
 from ml_model import NHLMLModel, blend_ml_and_similarity
-from ml_model_enhanced import EnhancedNHLMLModel
+from ml_model_streamlined import StreamlinedNHLMLModel
 from scraper import get_player_data_nhl_api_only
+from bet_tracker import get_performance_stats
+from analysis_history import save_analysis, get_history_stats
+from goalie_tracker import get_todays_starters, get_goalie_matchup_analysis
+from injury_tracker import get_todays_injuries, get_injury_impact_for_game
+from advanced_stats import get_team_advanced_stats
+from team_splits import get_team_splits
 
 
 def run_analysis(
@@ -89,13 +95,23 @@ def run_analysis(
         team_forms[team] = get_team_recent_form(team, all_games, n=10)
     
     # Step 3.5: Train/load ML model
-    print("\n[3.5/5] Initializing Enhanced ML model (with player data)...")
-    ml_model = EnhancedNHLMLModel()
+    print("\n[3.5/5] Initializing Streamlined ML model (hybrid approach)...")
+    ml_model = StreamlinedNHLMLModel()
     if not ml_model.load_models():
-        print("  Training new ML model...")
+        print("  Training new streamlined ML model...")
         ml_model.train(all_games, standings, team_forms)
     else:
-        print("  Loaded pre-trained ML model")
+        print("  Loaded pre-trained streamlined ML model")
+    
+    # Step 3.6: Fetch goalie data
+    print("\n[3.6/5] Fetching goalie data...")
+    goalie_starters = get_todays_starters()
+    print(f"  Loaded goalie data for {len(goalie_starters)} teams")
+    
+    # Step 3.7: Fetch injury data
+    print("\n[3.7/5] Fetching injury data...")
+    all_injuries = get_todays_injuries()
+    print(f"  Loaded injury data for {len(all_injuries)} teams")
 
     # Step 4: Fetch odds (if enabled)
     odds_games = []
@@ -196,22 +212,80 @@ def run_analysis(
             game_date = game_data["commence_time"][:10]
             player_data = get_player_data_nhl_api_only(home, away, game_date)
             
+            # Add goalie data to player_data
+            home_goalie_info = goalie_starters.get(home, {}).get('starter')
+            away_goalie_info = goalie_starters.get(away, {}).get('starter')
+            
+            if home_goalie_info:
+                player_data['home_goalie_stats'] = {
+                    'save_pct': home_goalie_info['stats'].get('save_pct', 0.910),
+                    'gaa': home_goalie_info['stats'].get('gaa', 2.80),
+                    'quality_score': home_goalie_info.get('quality_score', 50),
+                    # Recent form (last 10 starts)
+                    'recent_save_pct': home_goalie_info['stats'].get('recent_save_pct', 0.910),
+                    'recent_gaa': home_goalie_info['stats'].get('recent_gaa', 2.80),
+                    'recent_quality_starts': home_goalie_info['stats'].get('recent_quality_starts', 5),
+                }
+            
+            if away_goalie_info:
+                player_data['away_goalie_stats'] = {
+                    'save_pct': away_goalie_info['stats'].get('save_pct', 0.910),
+                    'gaa': away_goalie_info['stats'].get('gaa', 2.80),
+                    'quality_score': away_goalie_info.get('quality_score', 50),
+                    # Recent form (last 10 starts)
+                    'recent_save_pct': away_goalie_info['stats'].get('recent_save_pct', 0.910),
+                    'recent_gaa': away_goalie_info['stats'].get('recent_gaa', 2.80),
+                    'recent_quality_starts': away_goalie_info['stats'].get('recent_quality_starts', 5),
+                }
+            
+            # Add injury data to player_data
+            from injury_tracker import calculate_injury_impact
+            home_injuries = all_injuries.get(home, [])
+            away_injuries = all_injuries.get(away, [])
+            
+            home_injury_impact = calculate_injury_impact(home_injuries, home)
+            away_injury_impact = calculate_injury_impact(away_injuries, away)
+            
+            player_data['home_injury_impact'] = home_injury_impact['impact_score']
+            player_data['away_injury_impact'] = away_injury_impact['impact_score']
+            
+            # Add advanced stats to player_data
+            player_data['home_advanced_stats'] = get_team_advanced_stats(home)
+            player_data['away_advanced_stats'] = get_team_advanced_stats(away)
+            
+            # Add home/road splits to player_data
+            home_splits = get_team_splits(home, all_games, n_recent=10)
+            away_splits = get_team_splits(away, all_games, n_recent=10)
+            
+            player_data['home_team_splits'] = home_splits['home_recent']  # Home team at home
+            player_data['away_team_splits'] = away_splits['road_recent']  # Away team on road
+            
             home_stats_blend = {**standings[home], **{"win_pct": standings[home].get("win_pct", 0.5)}}
             away_stats_blend = {**standings[away], **{"win_pct": standings[away].get("win_pct", 0.5)}}
             
             # Try enhanced prediction with player data first
-            ml_pred = ml_model.predict_with_players(
+            ml_pred = ml_model.predict_with_context(
                 home_stats_blend, away_stats_blend, 
                 team_forms[home], team_forms[away],
                 player_data
             )
             
             if ml_pred:
-                # Blend ML with similarity model (60% similarity, 40% ML)
-                model_probs_enhanced = blend_ml_and_similarity(ml_pred, model_probs, ml_weight=0.4)
+                # Blend ML with similarity model (55% similarity, 45% ML)
+                # OPTIMIZED: Increased ML weight from 40% to 45% for better predictions
+                model_probs_enhanced = blend_ml_and_similarity(ml_pred, model_probs, ml_weight=0.45)
                 model_probs["home_win_prob"] = model_probs_enhanced["home_win_prob"]
                 model_probs["away_win_prob"] = model_probs_enhanced["away_win_prob"]
                 model_probs["expected_total"] = model_probs_enhanced["expected_total"]
+                
+                # Show adjustments if any were applied
+                adjustments = ml_pred.get('adjustments_applied', {})
+                adjustment_text = ""
+                if adjustments.get('factors'):
+                    factors_str = ', '.join(adjustments['factors'])
+                    win_adj = adjustments.get('win_prob_adjustment', 0)
+                    total_adj = adjustments.get('total_adjustment', 0)
+                    adjustment_text = f" [Adj: {win_adj:+.1%} win, {total_adj:+.1f} goals | {factors_str}]"
                 
                 # Add player context indicators
                 player_indicators = []
@@ -224,6 +298,34 @@ def run_analysis(
                 if player_data.get('away_rest_days', 1) >= 3:
                     player_indicators.append(f"{away} well-rested")
                 
+                # Add home/road split indicators
+                home_home_splits = player_data.get('home_team_splits', {})
+                away_road_splits = player_data.get('away_team_splits', {})
+                
+                if home_home_splits.get('win_pct', 0.5) > 0.7:
+                    player_indicators.append(f"{home} strong at home")
+                elif home_home_splits.get('win_pct', 0.5) < 0.3:
+                    player_indicators.append(f"{home} weak at home")
+                
+                if away_road_splits.get('win_pct', 0.5) > 0.7:
+                    player_indicators.append(f"{away} strong on road")
+                elif away_road_splits.get('win_pct', 0.5) < 0.3:
+                    player_indicators.append(f"{away} weak on road")
+                
+                # Add goalie recent form indicators
+                home_goalie_stats = player_data.get('home_goalie_stats', {})
+                away_goalie_stats = player_data.get('away_goalie_stats', {})
+                
+                if home_goalie_stats.get('recent_save_pct', 0.910) > 0.930:
+                    player_indicators.append(f"{home} G hot")
+                elif home_goalie_stats.get('recent_save_pct', 0.910) < 0.890:
+                    player_indicators.append(f"{home} G cold")
+                
+                if away_goalie_stats.get('recent_save_pct', 0.910) > 0.930:
+                    player_indicators.append(f"{away} G hot")
+                elif away_goalie_stats.get('recent_save_pct', 0.910) < 0.890:
+                    player_indicators.append(f"{away} G cold")
+                
                 player_context = f" [{', '.join(player_indicators)}]" if player_indicators else ""
             else:
                 player_context = ""
@@ -233,10 +335,33 @@ def run_analysis(
 
             # Print analysis
             line_source = "theScore" if thescore_odds.get("total_over") else "best available"
-            ml_indicator = " (ML+Player)" if ml_pred and ml_pred.get('used_player_data') else " (ML-enhanced)" if ml_pred else ""
+            ml_indicator = " (Hybrid ML+Rules)" if ml_pred and ml_pred.get('adjustments_applied') else " (ML-enhanced)" if ml_pred else ""
+            
+            # Add goalie context
+            goalie_context = ""
+            if home_goalie_info and away_goalie_info:
+                home_q = home_goalie_info.get('quality_score', 50)
+                away_q = away_goalie_info.get('quality_score', 50)
+                goalie_diff = home_q - away_q
+                
+                if abs(goalie_diff) > 10:
+                    advantage_team = home if goalie_diff > 0 else away
+                    goalie_context = f" [Goalie: {advantage_team} +{abs(goalie_diff):.0f}]"
+            
+            # Add injury context
+            injury_context = ""
+            if home_injury_impact['impact_score'] > 3 or away_injury_impact['impact_score'] > 3:
+                injury_parts = []
+                if home_injury_impact['impact_score'] > 3:
+                    injury_parts.append(f"{home} -{home_injury_impact['impact_score']:.0f}")
+                if away_injury_impact['impact_score'] > 3:
+                    injury_parts.append(f"{away} -{away_injury_impact['impact_score']:.0f}")
+                if injury_parts:
+                    injury_context = f" [Injuries: {', '.join(injury_parts)}]"
+            
             print(f"    Model{ml_indicator}: {home} {model_probs['home_win_prob']:.1%} / "
                   f"{away} {model_probs['away_win_prob']:.1%} "
-                  f"(confidence: {model_probs['confidence']:.0%}){player_context}")
+                  f"(confidence: {model_probs['confidence']:.0%}){player_context}{goalie_context}{injury_context}{adjustment_text if ml_pred else ''}")
             print(f"    Market: {home} {market_probs['home_win_prob']:.1%} / "
                   f"{away} {market_probs['away_win_prob']:.1%}")
             print(f"    Blended: {home} {blended['home_win_prob']:.1%} / "
@@ -259,6 +384,102 @@ def run_analysis(
                 print(f"    No +EV bets at current lines")
 
             all_bets.extend(game_bets)
+            # Collect context indicators for UI
+            context_indicators = {
+                "fatigue": [],
+                "goalie": [],
+                "injuries": [],
+                "splits": [],
+                "advanced": []
+            }
+            
+            # Fatigue indicators
+            if player_data.get('home_back_to_back'):
+                context_indicators["fatigue"].append({"team": home, "type": "B2B", "severity": "medium"})
+            if player_data.get('away_back_to_back'):
+                context_indicators["fatigue"].append({"team": away, "type": "B2B", "severity": "medium"})
+            if player_data.get('home_rest_days', 1) >= 3:
+                context_indicators["fatigue"].append({"team": home, "type": "well-rested", "severity": "positive"})
+            if player_data.get('away_rest_days', 1) >= 3:
+                context_indicators["fatigue"].append({"team": away, "type": "well-rested", "severity": "positive"})
+            
+            # Goalie indicators
+            home_goalie_stats = player_data.get('home_goalie_stats', {})
+            away_goalie_stats = player_data.get('away_goalie_stats', {})
+            
+            if home_goalie_stats.get('recent_save_pct', 0.910) > 0.930:
+                context_indicators["goalie"].append({"team": home, "type": "hot", "value": home_goalie_stats.get('recent_save_pct', 0), "severity": "positive"})
+            elif home_goalie_stats.get('recent_save_pct', 0.910) < 0.890:
+                context_indicators["goalie"].append({"team": home, "type": "cold", "value": home_goalie_stats.get('recent_save_pct', 0), "severity": "negative"})
+            
+            if away_goalie_stats.get('recent_save_pct', 0.910) > 0.930:
+                context_indicators["goalie"].append({"team": away, "type": "hot", "value": away_goalie_stats.get('recent_save_pct', 0), "severity": "positive"})
+            elif away_goalie_stats.get('recent_save_pct', 0.910) < 0.890:
+                context_indicators["goalie"].append({"team": away, "type": "cold", "value": away_goalie_stats.get('recent_save_pct', 0), "severity": "negative"})
+            
+            # Goalie advantage
+            if home_goalie_info and away_goalie_info:
+                home_q = home_goalie_info.get('quality_score', 50)
+                away_q = away_goalie_info.get('quality_score', 50)
+                goalie_diff = home_q - away_q
+                
+                if abs(goalie_diff) > 10:
+                    advantage_team = home if goalie_diff > 0 else away
+                    context_indicators["goalie"].append({
+                        "team": advantage_team,
+                        "type": "advantage",
+                        "value": abs(goalie_diff),
+                        "severity": "positive"
+                    })
+            
+            # Injury indicators
+            if home_injury_impact['impact_score'] > 3:
+                context_indicators["injuries"].append({
+                    "team": home,
+                    "impact": home_injury_impact['impact_score'],
+                    "severity": "negative"
+                })
+            if away_injury_impact['impact_score'] > 3:
+                context_indicators["injuries"].append({
+                    "team": away,
+                    "impact": away_injury_impact['impact_score'],
+                    "severity": "negative"
+                })
+            
+            # Home/road split indicators
+            home_home_splits = player_data.get('home_team_splits', {})
+            away_road_splits = player_data.get('away_team_splits', {})
+            
+            if home_home_splits.get('win_pct', 0.5) > 0.7:
+                context_indicators["splits"].append({
+                    "team": home,
+                    "type": "strong_home",
+                    "value": home_home_splits.get('win_pct', 0),
+                    "severity": "positive"
+                })
+            elif home_home_splits.get('win_pct', 0.5) < 0.3:
+                context_indicators["splits"].append({
+                    "team": home,
+                    "type": "weak_home",
+                    "value": home_home_splits.get('win_pct', 0),
+                    "severity": "negative"
+                })
+            
+            if away_road_splits.get('win_pct', 0.5) > 0.7:
+                context_indicators["splits"].append({
+                    "team": away,
+                    "type": "strong_road",
+                    "value": away_road_splits.get('win_pct', 0),
+                    "severity": "positive"
+                })
+            elif away_road_splits.get('win_pct', 0.5) < 0.3:
+                context_indicators["splits"].append({
+                    "team": away,
+                    "type": "weak_road",
+                    "value": away_road_splits.get('win_pct', 0),
+                    "severity": "negative"
+                })
+            
             game_analyses.append({
                 "game": game_label,
                 "home": home,
@@ -268,6 +489,35 @@ def run_analysis(
                 "blended_probs": blended,
                 "n_similar": len(similar),
                 "n_bets": len(game_bets),
+                "context_indicators": context_indicators,
+                "goalie_matchup": {
+                    "home": {
+                        "name": home_goalie_info['name'] if home_goalie_info else "Unknown",
+                        "quality_score": home_goalie_info.get('quality_score', 50) if home_goalie_info else 50,
+                        "recent_save_pct": home_goalie_stats.get('recent_save_pct', 0.910),
+                        "recent_gaa": home_goalie_stats.get('recent_gaa', 2.80),
+                        "recent_quality_starts": home_goalie_stats.get('recent_quality_starts', 5),
+                    } if home_goalie_info else None,
+                    "away": {
+                        "name": away_goalie_info['name'] if away_goalie_info else "Unknown",
+                        "quality_score": away_goalie_info.get('quality_score', 50) if away_goalie_info else 50,
+                        "recent_save_pct": away_goalie_stats.get('recent_save_pct', 0.910),
+                        "recent_gaa": away_goalie_stats.get('recent_gaa', 2.80),
+                        "recent_quality_starts": away_goalie_stats.get('recent_quality_starts', 5),
+                    } if away_goalie_info else None,
+                },
+                "team_splits": {
+                    "home": home_home_splits,
+                    "away": away_road_splits,
+                },
+                "injuries": {
+                    "home": home_injury_impact,
+                    "away": away_injury_impact,
+                },
+                "advanced_stats": {
+                    "home": player_data.get('home_advanced_stats', {}),
+                    "away": player_data.get('away_advanced_stats', {}),
+                }
             })
 
     else:
@@ -311,6 +561,35 @@ def run_analysis(
     print("\n")
     report = format_recommendations(all_bets, top_n=15, quota_info=quota_info)
     print(report)
+    
+    # Show past performance if available
+    stats = get_performance_stats()
+    if stats:
+        print("\n" + "=" * 75)
+        print("  PAST PERFORMANCE (Tracked Bets)")
+        print("=" * 75)
+        print(f"  Total bets: {stats['total_bets']} | "
+              f"Won: {stats['won']} ({stats['win_rate']:.1%}) | "
+              f"Lost: {stats['lost']}")
+        print(f"  Total staked: ${stats['total_staked']:.2f} | "
+              f"Profit: ${stats['total_profit']:+.2f} | "
+              f"ROI: {stats['roi']:+.2%}")
+        
+        # Show by grade
+        if stats.get('by_grade'):
+            print("\n  By Grade:")
+            for grade in ["A", "B+", "B", "C+"]:
+                if grade in stats['by_grade']:
+                    g = stats['by_grade'][grade]
+                    win_rate = g['won'] / len(g['bets']) if g['bets'] else 0
+                    roi = g['profit'] / g['staked'] if g['staked'] > 0 else 0
+                    print(f"    [{grade:3s}] {len(g['bets']):2d} bets | "
+                          f"Win: {win_rate:.1%} | "
+                          f"ROI: {roi:+.1%}")
+        
+        print("=" * 75)
+        print("  Run 'python bet_tracker.py --check' to update results")
+        print()
 
     # Save results
     output = {
@@ -324,11 +603,21 @@ def run_analysis(
             {k: v for k, v in bet.items() if not callable(v)}
             for bet in all_bets
         ],
+        "quota_info": quota_info,
     }
 
     output_path = Path(__file__).parent / "latest_analysis.json"
     output_path.write_text(json.dumps(output, indent=2, default=str))
     print(f"Full analysis saved to: {output_path}")
+    
+    # Save to history (with deduplication and 30-day rolling window)
+    save_analysis(output)
+    
+    # Show history stats
+    hist_stats = get_history_stats(days_back=7)
+    if hist_stats:
+        print(f"  📊 History: {hist_stats['total_analyses']} analyses, "
+              f"{hist_stats['total_bets_recommended']} bets in last 7 days")
 
     return all_bets, game_analyses
 

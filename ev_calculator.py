@@ -78,7 +78,10 @@ def evaluate_all_bets(
         min_confidence = max(min_confidence, 0.5)
 
     # --- MONEYLINE BETS ---
-    # Home ML
+    # Evaluate both but only keep the one with higher edge (if any)
+    home_ml_bet = None
+    away_ml_bet = None
+    
     if best_odds["moneyline"]["home"]:
         ev_data = calculate_ev(
             true_prob=blended_probs["home_win_prob"],
@@ -86,7 +89,7 @@ def evaluate_all_bets(
             stake=stake,
         )
         if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-            bets.append({
+            home_ml_bet = {
                 "game": game_label,
                 "bet_type": "Moneyline",
                 "pick": f"{home_team} ML",
@@ -94,9 +97,8 @@ def evaluate_all_bets(
                 "odds": best_odds["moneyline"]["home"]["price"],
                 **ev_data,
                 "confidence": confidence,
-            })
+            }
 
-    # Away ML
     if best_odds["moneyline"]["away"]:
         ev_data = calculate_ev(
             true_prob=blended_probs["away_win_prob"],
@@ -104,7 +106,7 @@ def evaluate_all_bets(
             stake=stake,
         )
         if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-            bets.append({
+            away_ml_bet = {
                 "game": game_label,
                 "bet_type": "Moneyline",
                 "pick": f"{away_team} ML",
@@ -112,12 +114,26 @@ def evaluate_all_bets(
                 "odds": best_odds["moneyline"]["away"]["price"],
                 **ev_data,
                 "confidence": confidence,
-            })
+            }
+    
+    # Only add the ML bet with higher edge (don't recommend both sides)
+    if home_ml_bet and away_ml_bet:
+        if home_ml_bet["edge"] > away_ml_bet["edge"]:
+            bets.append(home_ml_bet)
+        else:
+            bets.append(away_ml_bet)
+    elif home_ml_bet:
+        bets.append(home_ml_bet)
+    elif away_ml_bet:
+        bets.append(away_ml_bet)
 
     # --- SPREAD BETS ---
     # Skip spreads entirely in conservative mode (model isn't reliable enough)
     if not conservative:
-        # Home spread (puck line)
+        # Evaluate both but only keep the one with higher edge (if any)
+        home_spread_bet = None
+        away_spread_bet = None
+        
         if best_odds["spread"]["home"]:
             point = best_odds["spread"]["home"]["point"]
             ev_data = calculate_ev(
@@ -126,7 +142,7 @@ def evaluate_all_bets(
                 stake=stake,
             )
             if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-                bets.append({
+                home_spread_bet = {
                     "game": game_label,
                     "bet_type": "Spread",
                     "pick": f"{home_team} {point:+.1f}",
@@ -134,9 +150,8 @@ def evaluate_all_bets(
                     "odds": best_odds["spread"]["home"]["price"],
                     **ev_data,
                     "confidence": confidence,
-                })
+                }
 
-        # Away spread
         if best_odds["spread"]["away"]:
             point = best_odds["spread"]["away"]["point"]
             ev_data = calculate_ev(
@@ -145,7 +160,7 @@ def evaluate_all_bets(
                 stake=stake,
             )
             if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-                bets.append({
+                away_spread_bet = {
                     "game": game_label,
                     "bet_type": "Spread",
                     "pick": f"{away_team} {point:+.1f}",
@@ -153,10 +168,24 @@ def evaluate_all_bets(
                     "odds": best_odds["spread"]["away"]["price"],
                     **ev_data,
                     "confidence": confidence,
-                })
+                }
+        
+        # Only add the spread bet with higher edge (don't recommend both sides)
+        if home_spread_bet and away_spread_bet:
+            if home_spread_bet["edge"] > away_spread_bet["edge"]:
+                bets.append(home_spread_bet)
+            else:
+                bets.append(away_spread_bet)
+        elif home_spread_bet:
+            bets.append(home_spread_bet)
+        elif away_spread_bet:
+            bets.append(away_spread_bet)
 
     # --- TOTAL BETS ---
-    # Over
+    # Evaluate both but only keep the one with higher edge (if any)
+    over_bet = None
+    under_bet = None
+    
     if best_odds["total"]["over"]:
         point = best_odds["total"]["over"]["point"]
         ev_data = calculate_ev(
@@ -165,7 +194,7 @@ def evaluate_all_bets(
             stake=stake,
         )
         if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-            bets.append({
+            over_bet = {
                 "game": game_label,
                 "bet_type": "Total",
                 "pick": f"Over {point}",
@@ -173,9 +202,8 @@ def evaluate_all_bets(
                 "odds": best_odds["total"]["over"]["price"],
                 **ev_data,
                 "confidence": confidence,
-            })
+            }
 
-    # Under
     if best_odds["total"]["under"]:
         point = best_odds["total"]["under"]["point"]
         ev_data = calculate_ev(
@@ -184,7 +212,7 @@ def evaluate_all_bets(
             stake=stake,
         )
         if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-            bets.append({
+            under_bet = {
                 "game": game_label,
                 "bet_type": "Total",
                 "pick": f"Under {point}",
@@ -192,7 +220,18 @@ def evaluate_all_bets(
                 "odds": best_odds["total"]["under"]["price"],
                 **ev_data,
                 "confidence": confidence,
-            })
+            }
+    
+    # Only add the total bet with higher edge (don't recommend both over and under)
+    if over_bet and under_bet:
+        if over_bet["edge"] > under_bet["edge"]:
+            bets.append(over_bet)
+        else:
+            bets.append(under_bet)
+    elif over_bet:
+        bets.append(over_bet)
+    elif under_bet:
+        bets.append(under_bet)
 
     # Also evaluate theScore specifically if available
     bets.extend(_evaluate_thescore_odds(

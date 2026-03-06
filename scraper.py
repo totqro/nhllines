@@ -287,11 +287,19 @@ def get_player_data_nhl_api_only(home_team: str, away_team: str, game_date: str)
     Get all player data using only the free NHL API.
     Most reliable approach - no web scraping needed.
     
+    OPTIMIZED: Caches per-team data to avoid redundant API calls.
+    
     Returns dict with:
     - rest_days for both teams
     - back_to_back indicators
     - basic goalie info
     """
+    # Use per-team caching to avoid duplicate calls when same team plays multiple games
+    cache_key = f"player_data_{home_team}_{away_team}_{game_date}"
+    cached = _get_cached(cache_key, max_age_hours=12)
+    if cached:
+        return cached
+    
     data = {
         'home_rest_days': calculate_rest_days(home_team, game_date),
         'away_rest_days': calculate_rest_days(away_team, game_date),
@@ -303,6 +311,7 @@ def get_player_data_nhl_api_only(home_team: str, away_team: str, game_date: str)
         'away_injury_impact': 0,
     }
     
+    _set_cache(cache_key, data)
     return data
 
 

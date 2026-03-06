@@ -115,29 +115,44 @@ class NHLMLModel:
         y_spread = np.array(y_spread)
         
         # Train win probability model (classification)
+        # Optimized hyperparameters for better accuracy
         self.model_win = xgb.XGBClassifier(
-            n_estimators=100,
-            max_depth=5,
-            learning_rate=0.1,
+            n_estimators=150,  # Increased for better learning
+            max_depth=6,  # Slightly deeper for complex patterns
+            learning_rate=0.05,  # Lower for more stable learning
+            min_child_weight=3,  # Prevent overfitting
+            subsample=0.8,  # Row sampling for robustness
+            colsample_bytree=0.8,  # Feature sampling
+            gamma=0.1,  # Minimum loss reduction
             random_state=42,
             eval_metric='logloss'
         )
         self.model_win.fit(X_train, y_win)
         
         # Train total goals model (regression)
+        # Optimized for predicting continuous values
         self.model_total = xgb.XGBRegressor(
-            n_estimators=100,
-            max_depth=5,
-            learning_rate=0.1,
+            n_estimators=150,
+            max_depth=6,
+            learning_rate=0.05,
+            min_child_weight=3,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            gamma=0.1,
             random_state=42
         )
         self.model_total.fit(X_train, y_total)
         
         # Train spread model (regression)
+        # Optimized for goal differential prediction
         self.model_spread = xgb.XGBRegressor(
-            n_estimators=100,
-            max_depth=5,
-            learning_rate=0.1,
+            n_estimators=150,
+            max_depth=6,
+            learning_rate=0.05,
+            min_child_weight=3,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            gamma=0.1,
             random_state=42
         )
         self.model_spread.fit(X_train, y_spread)

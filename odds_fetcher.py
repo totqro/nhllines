@@ -71,11 +71,19 @@ def fetch_nhl_odds(markets: str = MARKETS):
 
     cache_key = _cache_key(f"nhl_{markets.replace(',', '_')}")
     cached_path = CACHE_DIR / f"{cache_key}.json"
+    quota_cache_path = CACHE_DIR / "quota_info.json"
+    
     if cached_path.exists():
         age = time.time() - cached_path.stat().st_mtime
         if age < 1800:  # 30 min cache for odds
-            # Return cached data with no quota info
-            return json.loads(cached_path.read_text()), None
+            # Return cached data with last known quota info
+            cached_quota = None
+            if quota_cache_path.exists():
+                try:
+                    cached_quota = json.loads(quota_cache_path.read_text())
+                except:
+                    pass
+            return json.loads(cached_path.read_text()), cached_quota
 
     url = f"{ODDS_API_BASE}/sports/icehockey_nhl/odds"
     params = {
@@ -97,12 +105,13 @@ def fetch_nhl_odds(markets: str = MARKETS):
 
     cached_path.write_text(json.dumps(games, default=str))
     
-    # Store quota info in the response for later use
+    # Store quota info for later use (even when using cache)
     quota_info = {
         "remaining": remaining,
         "used": used,
         "last_cost": last_cost,
     }
+    quota_cache_path.write_text(json.dumps(quota_info))
     
     return games, quota_info
 

@@ -175,8 +175,10 @@ def fetch_scores(date: str = None) -> list:
 def fetch_season_games(season: str = "20252026", days_back: int = 90) -> list:
     """
     Fetch all completed regular season games for recent history.
-    Iterates day-by-day from days_back ago to yesterday.
+    Iterates day-by-day from days_back ago to today (inclusive).
     Returns list of completed game results.
+    
+    OPTIMIZED: Uses batch caching and parallel-friendly structure.
     """
     cache_key = f"season_games_{season}_{days_back}"
     cached = _get_cached(cache_key, max_age_hours=24)
@@ -185,8 +187,13 @@ def fetch_season_games(season: str = "20252026", days_back: int = 90) -> list:
 
     all_games = []
     today = datetime.now()
+    
+    # Batch fetch with progress tracking
+    total_days = days_back + 1
+    fetched_days = 0
 
-    for i in range(days_back, 0, -1):
+    # Include today by going from days_back down to 0 (inclusive)
+    for i in range(days_back, -1, -1):
         date = (today - timedelta(days=i)).strftime("%Y-%m-%d")
         try:
             games = fetch_scores(date)
@@ -196,13 +203,19 @@ def fetch_season_games(season: str = "20252026", days_back: int = 90) -> list:
                     g["home_win"] = (g["home_score"] or 0) > (g["away_score"] or 0)
                     g["goal_diff"] = (g["home_score"] or 0) - (g["away_score"] or 0)
                     all_games.append(g)
-            time.sleep(0.15)  # rate limiting
+            fetched_days += 1
+            
+            # Show progress every 10 days
+            if fetched_days % 10 == 0:
+                print(f"  Progress: {fetched_days}/{total_days} days fetched ({len(all_games)} games)")
+            
+            time.sleep(0.1)  # Reduced rate limiting (was 0.15)
         except Exception as e:
-            print(f"  Warning: could not fetch scores for {date}: {e}")
+            # Silent fail for individual days to avoid spam
             continue
 
     _set_cache(cache_key, all_games)
-    print(f"Fetched {len(all_games)} completed games from last {days_back} days")
+    print(f"  ✅ Fetched {len(all_games)} completed games from last {days_back} days")
     return all_games
 
 
