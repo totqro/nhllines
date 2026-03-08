@@ -1,37 +1,29 @@
-# API Keys and Secrets
-config.json
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-venv/
 .venv/
+venv/
 env/
 ENV/
 
-# Cache
+# Data & Cache
 cache/
-
-# Analysis output
-latest_analysis.json
-
-# ML Models
 ml_models/
-*.pkl
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
+*.json
+!config.json.example
 
 # IDE
 .vscode/
-.idea/
+.DS_Store
 *.swp
 *.swo
-*~
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
