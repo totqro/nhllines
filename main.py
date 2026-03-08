@@ -98,11 +98,31 @@ def run_analysis(
     # Step 3.5: Train/load ML model
     print("\n[3.5/5] Initializing Streamlined ML model (hybrid approach)...")
     ml_model = StreamlinedNHLMLModel()
-    if not ml_model.load_models():
-        print("  Training new streamlined ML model...")
+    
+    # Check if models exist and their age
+    model_path = Path(__file__).parent / "ml_models" / "win_model.pkl"
+    should_retrain = False
+    
+    if model_path.exists():
+        import time
+        age_days = (time.time() - model_path.stat().st_mtime) / 86400
+        print(f"  Found existing models (age: {age_days:.1f} days)")
+        
+        # Retrain if models are > 7 days old
+        if age_days > 7:
+            print(f"  ⚠️  Models are stale (>{age_days:.0f} days old), retraining with latest data...")
+            should_retrain = True
+        else:
+            print(f"  ✅ Models are fresh, loading from disk...")
+    else:
+        print("  No existing models found, training new ones...")
+        should_retrain = True
+    
+    if should_retrain:
+        print("  Training streamlined ML model...")
         ml_model.train(all_games, standings, team_forms)
     else:
-        print("  Loaded pre-trained streamlined ML model")
+        ml_model.load_models()
     
     # Step 3.6: Fetch goalie data
     print("\n[3.6/5] Fetching goalie data...")
