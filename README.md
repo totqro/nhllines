@@ -86,6 +86,7 @@ nhllines/
 - **[Model Analysis Findings](docs/MODEL_ANALYSIS_FINDINGS.md)** - Model insights
 
 ### Feature Guides
+- **[ML Model Retraining](docs/ML_MODEL_RETRAINING.md)** - Automatic model updates
 - **[Goalie Tracker](docs/GOALIE_TRACKER_README.md)** - Goalie tracking system
 - **[Injury Tracker](docs/INJURY_TRACKER_README.md)** - Injury impact tracking
 - **[Bet Tracking](docs/BET_TRACKING_GUIDE.md)** - Performance tracking
@@ -99,6 +100,7 @@ nhllines/
 - 90-day historical game data
 - Real-time odds from multiple bookmakers
 - Multi-API key rotation (3 keys, automatic switching)
+- **Automatic ML model retraining** (models stay fresh, retrain when > 7 days old)
 - Starting goalie confirmation + quality scores
 - Injury impact tracking
 - Advanced stats (Corsi, xGF, PP%, PK%)
@@ -160,6 +162,7 @@ Get free API keys at: https://the-odds-api.com
    ```bash
    python main.py --conservative
    ```
+   Models automatically retrain if > 7 days old (takes ~30 seconds).
 
 2. **Review Recommendations**
    - Check bet grades (focus on A and B+)
@@ -170,6 +173,15 @@ Get free API keys at: https://the-odds-api.com
    ```bash
    python bet_tracker.py --check
    ```
+
+### Manual Model Retraining
+
+Models retrain automatically, but you can force it anytime:
+```bash
+python retrain_models.py
+```
+
+See `docs/ML_MODEL_RETRAINING.md` for details.
 
 ### Command Options
 
@@ -269,6 +281,7 @@ Private project - Not for distribution
 
 **Production Ready** ✅  
 **Performance Validated** ✅  
+**Auto-Retraining Enabled** ✅  
 **Next Priority:** CLV tracking 📊
 
-Last Updated: March 7, 2026
+Last Updated: March 8, 2026
