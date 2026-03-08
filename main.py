@@ -259,7 +259,7 @@ def run_analysis(
                 }
             
             # Add injury data to player_data
-            from injury_tracker import calculate_injury_impact
+            from src.analysis.injury_tracker import calculate_injury_impact
             home_injuries = all_injuries.get(home, [])
             away_injuries = all_injuries.get(away, [])
             
