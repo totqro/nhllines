@@ -373,9 +373,9 @@ def _fetch_goalie_recent_form(goalie_id: int, season: str = "20252026", n_games:
         quality_starts = 0
 
         for game in games:
-            saves = game.get("saves", 0)
             shots_against = game.get("shotsAgainst", 0)
             goals_against = game.get("goalsAgainst", 0)
+            saves = shots_against - goals_against  # Calculate saves
             toi = game.get("toi", "0:00")
 
             # Parse TOI (format: "MM:SS")

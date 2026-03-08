@@ -35,27 +35,144 @@ PREFERRED_BOOKS = [
 MARKETS = "h2h,spreads,totals"
 
 
-def get_api_key() -> str:
+def get_api_keys() -> list:
     """
-    Get The Odds API key from environment variable or config file.
+    Get all available Odds API keys from environment variables or config file.
+    Returns list of API keys.
     """
-    key = os.environ.get("ODDS_API_KEY", "")
-    if key:
-        return key
-
+    keys = []
+    
+    # Check environment variable
+    env_key = os.environ.get("ODDS_API_KEY", "")
+    if env_key:
+        keys.append(env_key)
+    
+    # Check config file for multiple keys
     config_path = Path(__file__).parent / "config.json"
     if config_path.exists():
         config = json.loads(config_path.read_text())
-        key = config.get("odds_api_key", "")
-        if key:
-            return key
+        
+        # Primary key
+        primary_key = config.get("odds_api_key", "")
+        if primary_key and primary_key not in keys:
+            keys.append(primary_key)
+        
+        # Secondary keys (odds_api_key_two, odds_api_key_three, etc.)
+        for i in range(2, 10):  # Support up to 9 keys
+            key_name = f"odds_api_key_{['two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'][i-2]}"
+            key = config.get(key_name, "")
+            if key and key not in keys:
+                keys.append(key)
+    
+    if not keys:
+        raise ValueError(
+            "No API key found!\n"
+            "1. Sign up free at https://the-odds-api.com\n"
+            "2. Either set ODDS_API_KEY environment variable, or\n"
+            "3. Create config.json with: {\"odds_api_key\": \"YOUR_KEY\", \"odds_api_key_two\": \"KEY2\"}"
+        )
+    
+    return keys
 
-    raise ValueError(
-        "No API key found!\n"
-        "1. Sign up free at https://the-odds-api.com\n"
-        "2. Either set ODDS_API_KEY environment variable, or\n"
-        "3. Create config.json with: {\"odds_api_key\": \"YOUR_KEY\"}"
-    )
+
+def get_api_key_with_quota() -> tuple:
+    """
+    Get an API key that still has quota remaining.
+    Returns (api_key, key_index).
+    Automatically rotates to next key if current one is exhausted.
+    """
+    keys = get_api_keys()
+    quota_cache_path = CACHE_DIR / "quota_info.json"
+    
+    # Load quota info for all keys
+    quota_info = {}
+    if quota_cache_path.exists():
+        try:
+            quota_info = json.loads(quota_cache_path.read_text())
+        except:
+            quota_info = {}
+    
+    # Try each key in order
+    for i, key in enumerate(keys):
+        key_id = f"key_{i}"
+        key_quota = quota_info.get(key_id, {})
+        
+        requests_used = key_quota.get("requests_used", 0)
+        requests_remaining = key_quota.get("requests_remaining", 500)
+        
+        # If this key has quota remaining, use it
+        if requests_remaining > 10:  # Keep 10 request buffer
+            return key, i
+    
+    # All keys exhausted - use first key anyway (will fail gracefully)
+    print("  ⚠️  Warning: All API keys may be exhausted")
+    return keys[0], 0
+
+
+def update_quota_info(key_index: int, quota_data: dict):
+    """
+    Update quota information for a specific API key.
+    """
+    quota_cache_path = CACHE_DIR / "quota_info.json"
+    
+    # Load existing quota info
+    all_quota = {}
+    if quota_cache_path.exists():
+        try:
+            all_quota = json.loads(quota_cache_path.read_text())
+        except:
+            all_quota = {}
+    
+    # Update this key's quota
+    key_id = f"key_{key_index}"
+    all_quota[key_id] = {
+        "requests_used": quota_data.get("requests_used", 0),
+        "requests_remaining": quota_data.get("requests_remaining", 0),
+        "last_updated": datetime.now().isoformat()
+    }
+    
+    # Save
+    quota_cache_path.write_text(json.dumps(all_quota, indent=2))
+
+
+def get_quota_summary() -> dict:
+    """
+    Get summary of quota usage across all API keys.
+    """
+    keys = get_api_keys()
+    quota_cache_path = CACHE_DIR / "quota_info.json"
+    
+    quota_info = {}
+    if quota_cache_path.exists():
+        try:
+            quota_info = json.loads(quota_cache_path.read_text())
+        except:
+            quota_info = {}
+    
+    summary = {
+        "total_keys": len(keys),
+        "total_remaining": 0,
+        "total_used": 0,
+        "keys": []
+    }
+    
+    for i in range(len(keys)):
+        key_id = f"key_{i}"
+        key_quota = quota_info.get(key_id, {})
+        
+        used = key_quota.get("requests_used", 0)
+        remaining = key_quota.get("requests_remaining", 500)
+        
+        summary["total_used"] += used
+        summary["total_remaining"] += remaining
+        summary["keys"].append({
+            "index": i,
+            "used": used,
+            "remaining": remaining,
+            "last_updated": key_quota.get("last_updated", "Never")
+        })
+    
+    return summary
 
 
 def _cache_key(name: str) -> str:
@@ -66,24 +183,20 @@ def fetch_nhl_odds(markets: str = MARKETS):
     """
     Fetch current NHL odds for all available games.
     Returns tuple of (games, quota_info).
+    Automatically rotates between multiple API keys.
     """
-    api_key = get_api_key()
+    # Get API key with available quota
+    api_key, key_index = get_api_key_with_quota()
 
     cache_key = _cache_key(f"nhl_{markets.replace(',', '_')}")
     cached_path = CACHE_DIR / f"{cache_key}.json"
-    quota_cache_path = CACHE_DIR / "quota_info.json"
     
     if cached_path.exists():
         age = time.time() - cached_path.stat().st_mtime
         if age < 1800:  # 30 min cache for odds
-            # Return cached data with last known quota info
-            cached_quota = None
-            if quota_cache_path.exists():
-                try:
-                    cached_quota = json.loads(quota_cache_path.read_text())
-                except:
-                    pass
-            return json.loads(cached_path.read_text()), cached_quota
+            # Return cached data with quota summary
+            quota_summary = get_quota_summary()
+            return json.loads(cached_path.read_text()), quota_summary
 
     url = f"{ODDS_API_BASE}/sports/icehockey_nhl/odds"
     params = {
@@ -97,23 +210,31 @@ def fetch_nhl_odds(markets: str = MARKETS):
     resp.raise_for_status()
     games = resp.json()
 
-    # Log remaining requests
+    # Log remaining requests for this key
     remaining = resp.headers.get("x-requests-remaining", "?")
     used = resp.headers.get("x-requests-used", "?")
     last_cost = resp.headers.get("x-requests-last", "?")
-    print(f"  Odds API: {used} requests used, {remaining} remaining this month")
+    
+    # Update quota info for this specific key
+    quota_data = {
+        "requests_used": int(used) if used != "?" else 0,
+        "requests_remaining": int(remaining) if remaining != "?" else 0,
+    }
+    update_quota_info(key_index, quota_data)
+    
+    # Get overall quota summary
+    quota_summary = get_quota_summary()
+    
+    # Display quota info
+    if quota_summary["total_keys"] > 1:
+        print(f"  Odds API: Using key #{key_index + 1}/{quota_summary['total_keys']}")
+        print(f"  Total quota: {quota_summary['total_used']} used, {quota_summary['total_remaining']} remaining across all keys")
+    else:
+        print(f"  Odds API: {used} requests used, {remaining} remaining this month")
 
     cached_path.write_text(json.dumps(games, default=str))
     
-    # Store quota info for later use (even when using cache)
-    quota_info = {
-        "remaining": remaining,
-        "used": used,
-        "last_cost": last_cost,
-    }
-    quota_cache_path.write_text(json.dumps(quota_info))
-    
-    return games, quota_info
+    return games, quota_summary
 
 
 def parse_odds(games: list) -> list:

@@ -121,9 +121,28 @@ def run_analysis(
         try:
             raw_odds, quota_info = fetch_nhl_odds()
             odds_games = parse_odds(raw_odds)
+            
+            # Filter out live/finished games
+            from datetime import timedelta, timezone
+            now_utc = datetime.now(timezone.utc)
+            
+            pre_game_only = []
+            for g in odds_games:
+                commence_time_str = g["commence_time"]
+                # Parse UTC time
+                game_time = datetime.fromisoformat(commence_time_str.replace('Z', '+00:00'))
+                hours_until_game = (game_time - now_utc).total_seconds() / 3600
+                
+                # Only include games that haven't started yet (at least 30 min before)
+                if hours_until_game > 0.5:
+                    pre_game_only.append(g)
+                else:
+                    print(f"  Skipping {g['away_team']} @ {g['home_team']} (game started {-hours_until_game:.1f}h ago)")
+            
+            odds_games = pre_game_only
+            
             # Filter to today's games only (commence_time is UTC, we're EST/UTC-5)
             # Include today and tomorrow UTC to catch evening EST games
-            from datetime import timedelta
             today = datetime.now()
             today_str = today.strftime("%Y-%m-%d")
             tomorrow_str = (today + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -144,7 +163,7 @@ def run_analysis(
                     if hour < 10:
                         filtered.append(g)
             odds_games = filtered
-            print(f"  Found odds for {len(odds_games)} games today")
+            print(f"  Found odds for {len(odds_games)} games today (pre-game only)")
         except Exception as e:
             print(f"  Warning: Could not fetch odds: {e}")
             print("  Continuing with historical analysis only...")

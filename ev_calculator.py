@@ -348,9 +348,25 @@ def format_recommendations(all_bets: list, top_n: int = 15, quota_info: dict = N
     if quota_info:
         lines.append("-" * 75)
         lines.append("  ODDS API QUOTA")
-        lines.append(f"  Requests used this month: {quota_info['used']}")
-        lines.append(f"  Requests remaining: {quota_info['remaining']}")
-        lines.append(f"  Last request cost: {quota_info['last_cost']} credit(s)")
+        
+        # Check if it's the new multi-key format
+        if isinstance(quota_info, dict) and "total_keys" in quota_info:
+            # Multi-key format
+            lines.append(f"  Total API keys: {quota_info['total_keys']}")
+            lines.append(f"  Combined quota: {quota_info['total_used']} used, {quota_info['total_remaining']} remaining")
+            
+            if len(quota_info.get('keys', [])) > 1:
+                lines.append("")
+                lines.append("  Per-key breakdown:")
+                for key_info in quota_info['keys']:
+                    lines.append(f"    Key #{key_info['index'] + 1}: {key_info['used']} used, {key_info['remaining']} remaining")
+        else:
+            # Old single-key format
+            lines.append(f"  Requests used this month: {quota_info.get('used', '?')}")
+            lines.append(f"  Requests remaining: {quota_info.get('remaining', '?')}")
+            if 'last_cost' in quota_info:
+                lines.append(f"  Last request cost: {quota_info['last_cost']} credit(s)")
+        
         lines.append("=" * 75)
         lines.append("")
 
