@@ -25,40 +25,41 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from nhl_data import (
+from src.data import (
     fetch_standings,
     fetch_season_games,
     fetch_todays_games,
     get_team_recent_form,
     get_h2h_record,
-)
-from odds_fetcher import (
     fetch_nhl_odds,
     parse_odds,
     get_best_odds,
     get_consensus_no_vig_odds,
     team_name_to_abbrev,
+    get_player_data_nhl_api_only,
 )
-from model import (
+from src.models import (
     find_similar_games,
     estimate_probabilities,
     blend_model_and_market,
+    StreamlinedNHLMLModel,
 )
-from ev_calculator import (
+from src.models.ml_model import NHLMLModel, blend_ml_and_similarity
+from src.analysis import (
     evaluate_all_bets,
     format_recommendations,
     kelly_criterion,
     calculate_ev,
+    get_performance_stats,
+    save_analysis,
+    get_history_stats,
+    get_todays_starters,
+    get_goalie_matchup_analysis,
+    get_todays_injuries,
+    get_injury_impact_for_game,
+    get_team_advanced_stats,
+    get_team_splits,
 )
-from ml_model import NHLMLModel, blend_ml_and_similarity
-from ml_model_streamlined import StreamlinedNHLMLModel
-from scraper import get_player_data_nhl_api_only
-from bet_tracker import get_performance_stats
-from analysis_history import save_analysis, get_history_stats
-from goalie_tracker import get_todays_starters, get_goalie_matchup_analysis
-from injury_tracker import get_todays_injuries, get_injury_impact_for_game
-from advanced_stats import get_team_advanced_stats
-from team_splits import get_team_splits
 
 
 def run_analysis(
@@ -625,7 +626,7 @@ def run_analysis(
         "quota_info": quota_info,
     }
 
-    output_path = Path(__file__).parent / "latest_analysis.json"
+    output_path = Path(__file__).parent / "data" / "latest_analysis.json"
     output_path.write_text(json.dumps(output, indent=2, default=str))
     print(f"Full analysis saved to: {output_path}")
     
