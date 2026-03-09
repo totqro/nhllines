@@ -279,6 +279,7 @@ def run_analysis(
                 }
             
             # Add injury data to player_data
+            from src.analysis.injury_impact_enhanced import get_injury_adjusted_probabilities
             from src.analysis.injury_tracker import calculate_injury_impact
             home_injuries = all_injuries.get(home, [])
             away_injuries = all_injuries.get(away, [])
@@ -288,6 +289,15 @@ def run_analysis(
             
             player_data['home_injury_impact'] = home_injury_impact['impact_score']
             player_data['away_injury_impact'] = away_injury_impact['impact_score']
+            
+            # Calculate injury-adjusted win probabilities (for later use)
+            injury_adjustment_data = get_injury_adjusted_probabilities(
+                base_home_prob=0.5,  # Will be updated after ML prediction
+                home_injuries=home_injuries,
+                away_injuries=away_injuries,
+                home_team=home,
+                away_team=away
+            )
             
             # Add advanced stats to player_data
             player_data['home_advanced_stats'] = get_team_advanced_stats(home)
@@ -372,6 +382,24 @@ def run_analysis(
 
             # Blend model with market
             blended = blend_model_and_market(model_probs, market_probs)
+            
+            # Apply injury adjustment to blended probabilities
+            # This uses historical data to adjust for injury impact
+            injury_adjusted = get_injury_adjusted_probabilities(
+                base_home_prob=blended['home_win_prob'],
+                home_injuries=home_injuries,
+                away_injuries=away_injuries,
+                home_team=home,
+                away_team=away
+            )
+            
+            # Update blended probabilities with injury adjustment
+            if abs(injury_adjusted['adjustment']) > 0.01:  # Only apply if significant (>1%)
+                blended['home_win_prob'] = injury_adjusted['adjusted_home_prob']
+                blended['away_win_prob'] = injury_adjusted['adjusted_away_prob']
+                injury_adj_text = f" [Injury adj: {injury_adjusted['adjustment']:+.1%}]"
+            else:
+                injury_adj_text = ""
 
             # Print analysis
             line_source = "theScore" if thescore_odds.get("total_over") else "best available"
@@ -405,7 +433,7 @@ def run_analysis(
             print(f"    Market: {home} {market_probs['home_win_prob']:.1%} / "
                   f"{away} {market_probs['away_win_prob']:.1%}")
             print(f"    Blended: {home} {blended['home_win_prob']:.1%} / "
-                  f"{away} {blended['away_win_prob']:.1%}")
+                  f"{away} {blended['away_win_prob']:.1%}{injury_adj_text}")
             if total_line:
                 print(f"    Total: line {total_line} ({line_source}), model expects "
                       f"{model_probs['expected_total']:.1f} goals "
