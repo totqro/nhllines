@@ -86,6 +86,7 @@ nhllines/
 - **[Model Analysis Findings](docs/MODEL_ANALYSIS_FINDINGS.md)** - Model insights
 
 ### Feature Guides
+- **[Injury Impact Analysis](docs/INJURY_IMPACT_ANALYSIS.md)** - Historical injury analysis
 - **[ML Model Retraining](docs/ML_MODEL_RETRAINING.md)** - Automatic model updates
 - **[Goalie Tracker](docs/GOALIE_TRACKER_README.md)** - Goalie tracking system
 - **[Injury Tracker](docs/INJURY_TRACKER_README.md)** - Injury impact tracking
@@ -101,8 +102,9 @@ nhllines/
 - Real-time odds from multiple bookmakers
 - Multi-API key rotation (3 keys, automatic switching)
 - **Automatic ML model retraining** (models stay fresh, retrain when > 7 days old)
+- **Historical injury impact analysis** (quantified from 799 games, position-specific weighting)
 - Starting goalie confirmation + quality scores
-- Injury impact tracking
+- Injury impact tracking with data-driven adjustments
 - Advanced stats (Corsi, xGF, PP%, PK%)
 - Home/road split analysis
 - Back-to-back fatigue detection
