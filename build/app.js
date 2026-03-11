@@ -372,33 +372,17 @@ function formatBookName(book) {
 
 function displayRecommendations(recommendations, stake) {
     const container = document.getElementById('recommendations-list');
-
+    
     if (recommendations.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #8a9ba8; padding: 20px;">No +EV bets found for today\'s games.</p>';
         return;
     }
-
-    // Group recommendations by game and pick to find all available books
-    const betGroups = {};
-    recommendations.forEach(bet => {
-        const key = `${bet.game}|${bet.pick}`;
-        if (!betGroups[key]) {
-            betGroups[key] = [];
-        }
-        betGroups[key].push(bet);
-    });
-
+    
     // Don't sort here - sorting is handled by applyFilters()
     container.innerHTML = recommendations.map((bet, index) => {
         const grade = getGrade(bet.edge);
         const gradeClass = getGradeClass(grade);
-        const betKey = `${bet.game}|${bet.pick}`;
-        const allBooksForBet = betGroups[betKey] || [bet];
-
-        // Sort books by odds (best first)
-        const sortedBooks = [...allBooksForBet].sort((a, b) => b.odds - a.odds);
-        const bestBook = sortedBooks[0];
-
+        
         return `
             <div class="bet-card">
                 <div class="bet-header">
@@ -406,54 +390,8 @@ function displayRecommendations(recommendations, stake) {
                         <span class="grade ${gradeClass}">${grade}</span>
                         <span class="bet-pick">${bet.pick}</span>
                     </div>
-                    ${sortedBooks.length > 1 ? `<button class="odds-toggle" onclick="toggleOddsDropdown(${index})">📊 ${sortedBooks.length} Books</button>` : ''}
                 </div>
-
-                <!-- Primary metrics row - Key decision factors -->
                 <div class="bet-details">
-                    <div class="detail-item detail-key">
-                        <span class="detail-label">Edge</span>
-                        <span class="detail-value positive">${(bet.edge * 100).toFixed(1)}%</span>
-                    </div>
-                    <div class="detail-item detail-key">
-                        <span class="detail-label">ROI</span>
-                        <span class="detail-value positive">${(bet.roi * 100).toFixed(1)}%</span>
-                    </div>
-                    <div class="detail-item detail-key">
-                        <span class="detail-label">EV per $${stake}</span>
-                        <span class="detail-value positive">$${bet.ev.toFixed(3)}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Odds</span>
-                        <span class="detail-value">${bet.odds > 0 ? '+' : ''}${bet.odds}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Book</span>
-                        <span class="detail-value">${formatBookName(bet.book)}</span>
-                    </div>
-                </div>
-
-                <!-- Odds comparison dropdown -->
-                ${sortedBooks.length > 1 ? `
-                <div class="odds-dropdown" id="odds-dropdown-${index}" style="display: none;">
-                    <div class="odds-dropdown-header">
-                        <span>${bet.game}</span>
-                        <span class="odds-dropdown-subtitle">Bet Type: ${bet.bet_type}</span>
-                    </div>
-                    <div class="odds-list">
-                        ${sortedBooks.map((bookBet, bookIndex) => `
-                            <div class="odds-item ${bookIndex === 0 ? 'best-odds' : ''}">
-                                <span class="odds-book">${formatBookName(bookBet.book)}</span>
-                                <span class="odds-price">${bookBet.odds > 0 ? '+' : ''}${bookBet.odds}</span>
-                                ${bookIndex === 0 ? '<span class="best-badge">⭐ BEST</span>' : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                ` : ''}
-
-                <!-- Secondary metrics row - Supporting information -->
-                <div class="bet-details-secondary">
                     <div class="detail-item">
                         <span class="detail-label">Game</span>
                         <span class="detail-value">${bet.game}</span>
@@ -461,6 +399,18 @@ function displayRecommendations(recommendations, stake) {
                     <div class="detail-item">
                         <span class="detail-label">Type</span>
                         <span class="detail-value">${bet.bet_type}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Book</span>
+                        <span class="detail-value">${bet.book}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Odds</span>
+                        <span class="detail-value">${bet.odds > 0 ? '+' : ''}${bet.odds}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Edge</span>
+                        <span class="detail-value positive">${(bet.edge * 100).toFixed(1)}%</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Model Prob</span>
@@ -471,6 +421,14 @@ function displayRecommendations(recommendations, stake) {
                         <span class="detail-value">${(bet.implied_prob * 100).toFixed(1)}%</span>
                     </div>
                     <div class="detail-item">
+                        <span class="detail-label">EV per $${stake}</span>
+                        <span class="detail-value positive">${bet.ev.toFixed(4)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">ROI</span>
+                        <span class="detail-value positive">${(bet.roi * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="detail-item">
                         <span class="detail-label">Confidence</span>
                         <span class="detail-value">${(bet.confidence * 100).toFixed(0)}%</span>
                     </div>
@@ -478,13 +436,6 @@ function displayRecommendations(recommendations, stake) {
             </div>
         `;
     }).join('');
-}
-
-function toggleOddsDropdown(index) {
-    const dropdown = document.getElementById(`odds-dropdown-${index}`);
-    if (dropdown) {
-        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-    }
 }
 
 function displayGames(games) {

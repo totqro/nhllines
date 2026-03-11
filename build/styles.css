@@ -243,88 +243,51 @@ header h1 {
 
 .grade {
     display: inline-block;
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
     font-weight: 800;
-    font-size: 1.05rem;
-    border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    letter-spacing: 0.02em;
+    font-size: 1rem;
+    border: 2px solid var(--sharks-white);
 }
 
 .grade-a {
-    background: linear-gradient(135deg, #FF4444 0%, #CC0000 100%);
+    background: #FF4444;
     color: white;
-    box-shadow: 
-        0 2px 8px rgba(255, 68, 68, 0.4),
-        0 4px 16px rgba(255, 68, 68, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(255, 68, 68, 0.5);
 }
 
 .grade-b-plus {
-    background: linear-gradient(135deg, var(--sharks-orange) 0%, #D67A00 100%);
+    background: var(--sharks-orange);
     color: white;
-    box-shadow: 
-        0 2px 8px rgba(244, 144, 30, 0.4),
-        0 4px 16px rgba(244, 144, 30, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(244, 144, 30, 0.5);
 }
 
 .grade-b {
-    background: linear-gradient(135deg, var(--sharks-teal-bright) 0%, var(--sharks-teal) 100%);
+    background: var(--sharks-teal-bright);
     color: white;
-    box-shadow: 
-        0 2px 8px rgba(0, 168, 181, 0.4),
-        0 4px 16px rgba(0, 168, 181, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 168, 181, 0.5);
 }
 
 .grade-c-plus {
-    background: linear-gradient(135deg, #78909C 0%, #546E7A 100%);
+    background: #607D8B;
     color: white;
-    box-shadow: 
-        0 2px 8px rgba(96, 125, 139, 0.4),
-        0 4px 16px rgba(96, 125, 139, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(96, 125, 139, 0.5);
 }
 
 .bet-card {
-    background: linear-gradient(145deg, rgba(0, 56, 68, 0.95) 0%, rgba(0, 18, 25, 0.98) 100%);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 16px;
-    box-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.3),
-        0 8px 24px rgba(0, 109, 117, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(0, 168, 181, 0.2);
-    border-left: 4px solid var(--sharks-orange);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-}
-
-.bet-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(244, 144, 30, 0.3) 50%, 
-        transparent 100%);
+    background: linear-gradient(135deg, var(--sharks-teal) 0%, var(--bg-card) 100%);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 20px rgba(0, 109, 117, 0.4);
+    border: 3px solid var(--sharks-orange);
+    transition: all 0.3s;
 }
 
 .bet-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.4),
-        0 12px 32px rgba(244, 144, 30, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    border-color: rgba(244, 144, 30, 0.4);
-    border-left-width: 5px;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(244, 144, 30, 0.6);
+    border-color: var(--sharks-white);
 }
 
 .bet-header {
@@ -332,100 +295,47 @@ header h1 {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .bet-pick {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.4rem;
+    font-weight: 800;
     color: var(--sharks-white);
     margin-left: 12px;
-    letter-spacing: -0.02em;
 }
 
 .bet-details {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-bottom: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
 }
 
-/* Key metrics - larger and more prominent */
 .detail-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 12px;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    transition: all 0.2s;
-}
-
-.detail-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(244, 144, 30, 0.3);
-}
-
-/* Emphasize key metrics */
-.detail-item.detail-key {
-    background: rgba(244, 144, 30, 0.12);
-    border: 1px solid rgba(244, 144, 30, 0.3);
-    box-shadow: 0 2px 8px rgba(244, 144, 30, 0.15);
-}
-
-.detail-item.detail-key:hover {
-    background: rgba(244, 144, 30, 0.18);
-    border-color: rgba(244, 144, 30, 0.5);
-    box-shadow: 0 3px 12px rgba(244, 144, 30, 0.25);
 }
 
 .detail-label {
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    color: var(--sharks-white);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     font-weight: 600;
 }
 
 .detail-value {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
-    font-variant-numeric: tabular-nums;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--sharks-white);
 }
 
 .detail-value.positive {
     color: var(--sharks-orange);
-    font-weight: 700;
-    font-size: 1.25rem;
-}
-
-/* Secondary row for less critical info */
-.bet-details-secondary {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    padding-top: 12px;
-    margin-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.bet-details-secondary .detail-item {
-    background: rgba(255, 255, 255, 0.02);
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.bet-details-secondary .detail-label {
-    font-size: 0.65rem;
-    opacity: 0.7;
-}
-
-.bet-details-secondary .detail-value {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.85);
+    font-weight: 800;
 }
 
 .game-analysis {
@@ -773,10 +683,6 @@ header h1 {
         grid-template-columns: 1fr;
     }
     
-    .bet-details-secondary {
-        grid-template-columns: 1fr;
-    }
-    
     .game-stats {
         grid-template-columns: 1fr;
     }
@@ -1117,123 +1023,5 @@ header h1 {
     .context-badge {
         font-size: 0.75rem;
         padding: 5px 10px;
-    }
-}
-
-/* Odds Toggle Button */
-.odds-toggle {
-    background: linear-gradient(135deg, var(--sharks-teal) 0%, var(--sharks-teal-bright) 100%);
-    color: var(--sharks-white);
-    border: 2px solid var(--sharks-orange);
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.odds-toggle:hover {
-    background: linear-gradient(135deg, var(--sharks-orange) 0%, #D67A00 100%);
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(244, 144, 30, 0.4);
-}
-
-/* Odds Dropdown */
-.odds-dropdown {
-    margin-top: 16px;
-    padding: 16px;
-    background: rgba(0, 109, 117, 0.15);
-    border-radius: 10px;
-    border: 2px solid rgba(244, 144, 30, 0.3);
-    animation: slideDown 0.3s ease;
-}
-
-.odds-dropdown-header {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid rgba(244, 144, 30, 0.3);
-}
-
-.odds-dropdown-header span:first-child {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--sharks-white);
-}
-
-.odds-dropdown-subtitle {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 600;
-}
-
-.odds-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.odds-item {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s;
-}
-
-.odds-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(244, 144, 30, 0.3);
-}
-
-.odds-item.best-odds {
-    background: rgba(244, 144, 30, 0.15);
-    border: 2px solid rgba(244, 144, 30, 0.5);
-    box-shadow: 0 2px 8px rgba(244, 144, 30, 0.2);
-}
-
-.odds-book {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--sharks-white);
-}
-
-.odds-price {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--sharks-orange);
-    font-variant-numeric: tabular-nums;
-}
-
-.best-badge {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--sharks-orange);
-    padding: 4px 10px;
-    background: rgba(244, 144, 30, 0.2);
-    border-radius: 6px;
-    border: 1px solid var(--sharks-orange);
-}
-
-/* Mobile responsive for odds dropdown */
-@media (max-width: 768px) {
-    .odds-item {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 6px;
-    }
-    
-    .best-badge {
-        justify-self: center;
     }
 }

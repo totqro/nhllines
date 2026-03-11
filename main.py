@@ -13,7 +13,7 @@ Usage:
     python main.py --min-edge 0.03   # Minimum edge to show (default 0.02)
 
 Setup:
-    1. pip install requests
+    1. pip3 install requests
     2. Sign up for free API key at https://the-odds-api.com
     3. Create config.json: {"odds_api_key": "YOUR_KEY_HERE"}
        OR set environment variable: export ODDS_API_KEY=your_key
@@ -405,16 +405,30 @@ def run_analysis(
             line_source = "theScore" if thescore_odds.get("total_over") else "best available"
             ml_indicator = " (Hybrid ML+Rules)" if ml_pred and ml_pred.get('adjustments_applied') else " (ML-enhanced)" if ml_pred else ""
             
-            # Add goalie context
+            # Add goalie context with confirmation status
             goalie_context = ""
+            goalie_status_text = ""
             if home_goalie_info and away_goalie_info:
                 home_q = home_goalie_info.get('quality_score', 50)
                 away_q = away_goalie_info.get('quality_score', 50)
                 goalie_diff = home_q - away_q
                 
+                # Add confirmation status
+                home_status = home_goalie_info.get('status', 'projected')
+                away_status = away_goalie_info.get('status', 'projected')
+                
+                if home_status == 'confirmed' and away_status == 'confirmed':
+                    goalie_status_text = " ✓"
+                elif home_status == 'confirmed' or away_status == 'confirmed':
+                    goalie_status_text = " ✓?"
+                else:
+                    goalie_status_text = " ?"
+                
                 if abs(goalie_diff) > 10:
                     advantage_team = home if goalie_diff > 0 else away
-                    goalie_context = f" [Goalie: {advantage_team} +{abs(goalie_diff):.0f}]"
+                    goalie_context = f" [Goalie{goalie_status_text}: {advantage_team} +{abs(goalie_diff):.0f}]"
+                elif goalie_status_text:
+                    goalie_context = f" [Goalies{goalie_status_text}]"
             
             # Add injury context
             injury_context = ""
