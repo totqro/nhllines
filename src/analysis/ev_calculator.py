@@ -254,11 +254,14 @@ def _evaluate_thescore_odds(
     if not thescore:
         return bets
 
-    # theScore moneyline
+    # theScore moneyline - only keep the side with higher edge
+    home_ts_bet = None
+    away_ts_bet = None
+
     if "ml_home" in thescore:
         ev_data = calculate_ev(blended_probs["home_win_prob"], thescore["ml_home"], stake)
         if ev_data["edge"] >= min_edge:
-            bets.append({
+            home_ts_bet = {
                 "game": game_label,
                 "bet_type": "Moneyline",
                 "pick": f"{home_team} ML (theScore)",
@@ -266,12 +269,12 @@ def _evaluate_thescore_odds(
                 "odds": thescore["ml_home"],
                 **ev_data,
                 "confidence": blended_probs.get("model_confidence", 0),
-            })
+            }
 
     if "ml_away" in thescore:
         ev_data = calculate_ev(blended_probs["away_win_prob"], thescore["ml_away"], stake)
         if ev_data["edge"] >= min_edge:
-            bets.append({
+            away_ts_bet = {
                 "game": game_label,
                 "bet_type": "Moneyline",
                 "pick": f"{away_team} ML (theScore)",
@@ -279,7 +282,17 @@ def _evaluate_thescore_odds(
                 "odds": thescore["ml_away"],
                 **ev_data,
                 "confidence": blended_probs.get("model_confidence", 0),
-            })
+            }
+
+    if home_ts_bet and away_ts_bet:
+        if home_ts_bet["edge"] > away_ts_bet["edge"]:
+            bets.append(home_ts_bet)
+        else:
+            bets.append(away_ts_bet)
+    elif home_ts_bet:
+        bets.append(home_ts_bet)
+    elif away_ts_bet:
+        bets.append(away_ts_bet)
 
     return bets
 
