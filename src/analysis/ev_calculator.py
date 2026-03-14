@@ -87,7 +87,12 @@ def _evaluate_all_total_lines(
     """
     total_bets = []
     expected_total = blended_probs.get("expected_total", 6.0)
-    main_line = blended_probs.get("total_line")  # The line the model was trained on
+    
+    # Get the main line from best_odds (the most common line)
+    # This is the line the blended probabilities are calculated for
+    main_line = None
+    if best_odds.get("total", {}).get("over"):
+        main_line = best_odds["total"]["over"]["point"]
     
     # Collect all unique total lines with their best odds
     lines_data = {}  # {line: {"over": {book, odds}, "under": {book, odds}}}
@@ -363,6 +368,16 @@ def evaluate_all_bets(
     if total_bets_by_line:
         best_total = max(total_bets_by_line, key=lambda b: b["ev"])
         bets.append(best_total)
+
+    # Also evaluate theScore specifically if available
+    bets.extend(_evaluate_thescore_odds(
+        game_label, home_team, away_team,
+        blended_probs, best_odds, stake, min_edge
+    ))
+
+    # Sort by EV descending
+    bets.sort(key=lambda b: b["ev"], reverse=True)
+    return bets
 
     # Also evaluate theScore specifically if available
     bets.extend(_evaluate_thescore_odds(
