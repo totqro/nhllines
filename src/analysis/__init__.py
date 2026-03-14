@@ -8,6 +8,7 @@ from .ev_calculator import (
 from .bet_tracker import get_performance_stats
 from .analysis_history import save_analysis, get_history_stats
 from .goalie_tracker import get_todays_starters, get_goalie_matchup_analysis
+from .goalie_adjustment import calculate_goalie_adjustment, apply_goalie_adjustment
 from .injury_tracker import get_todays_injuries, get_injury_impact_for_game
 from .advanced_stats import get_team_advanced_stats
 from .team_splits import get_team_splits
@@ -22,6 +23,8 @@ __all__ = [
     'get_history_stats',
     'get_todays_starters',
     'get_goalie_matchup_analysis',
+    'calculate_goalie_adjustment',
+    'apply_goalie_adjustment',
     'get_todays_injuries',
     'get_injury_impact_for_game',
     'get_team_advanced_stats',

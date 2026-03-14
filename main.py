@@ -392,7 +392,9 @@ def run_analysis(
                 home_injuries=home_injuries,
                 away_injuries=away_injuries,
                 home_team=home,
-                away_team=away
+                away_team=away,
+                model_home_prob=model_probs['home_win_prob'],
+                market_home_prob=market_probs['home_win_prob']
             )
             
             # Update blended probabilities with injury adjustment

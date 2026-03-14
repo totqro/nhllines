@@ -333,7 +333,7 @@ def fetch_goalie_stats_nhl_api(team_abbrev: str, season: str = "20252026"):
     except Exception as e:
         print(f"  ⚠️  Could not fetch goalie stats for {team_abbrev}: {e}")
         return []
-def _fetch_goalie_recent_form(goalie_id: int, season: str = "20252026", n_games: int = 10):
+def _fetch_goalie_recent_form(goalie_id: int, season: str = "20252026", n_games: int = 15):
     """
     Fetch recent form for a goalie (last n starts).
 

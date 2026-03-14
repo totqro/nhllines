@@ -19,7 +19,7 @@ def load_injury_coefficients():
     
     # Default coefficients if file doesn't exist
     return {
-        'injury_win_prob_coefficient': -0.02,
+        'injury_win_prob_coefficient': -0.005,  # Reduced from -0.02 (75% reduction)
         'position_multipliers': {
             'G': 1.5,
             'D': 1.2,
@@ -39,7 +39,9 @@ def load_injury_coefficients():
 
 
 def calculate_injury_win_prob_adjustment(home_injuries: list, away_injuries: list, 
-                                         home_team: str, away_team: str) -> dict:
+                                         home_team: str, away_team: str,
+                                         model_home_prob: float = None,
+                                         market_home_prob: float = None) -> dict:
     """
     Calculate win probability adjustment based on injuries.
     
@@ -75,8 +77,19 @@ def calculate_injury_win_prob_adjustment(home_injuries: list, away_injuries: lis
     # Negative net_impact = home team less injured = positive adjustment
     win_prob_adjustment = -net_impact * coef
     
-    # Cap adjustment at ±20%
-    win_prob_adjustment = max(-0.20, min(0.20, win_prob_adjustment))
+    # Consensus check: reduce adjustment if it contradicts both model and market
+    if model_home_prob is not None and market_home_prob is not None:
+        model_favors_home = model_home_prob > 0.5
+        market_favors_home = market_home_prob > 0.5
+        adjustment_favors_home = win_prob_adjustment > 0
+        
+        # If adjustment contradicts BOTH model and market, reduce to 30%
+        if (model_favors_home == market_favors_home and 
+            adjustment_favors_home != model_favors_home):
+            win_prob_adjustment *= 0.3
+    
+    # Cap adjustment at ±10% (reduced from ±20%)
+    win_prob_adjustment = max(-0.10, min(0.10, win_prob_adjustment))
     
     # Generate explanation
     if abs(net_impact) < 1:
@@ -103,7 +116,9 @@ def calculate_injury_win_prob_adjustment(home_injuries: list, away_injuries: lis
 
 def get_injury_adjusted_probabilities(base_home_prob: float, home_injuries: list, 
                                      away_injuries: list, home_team: str, 
-                                     away_team: str) -> dict:
+                                     away_team: str,
+                                     model_home_prob: float = None,
+                                     market_home_prob: float = None) -> dict:
     """
     Adjust win probabilities based on injury impact.
     
@@ -118,7 +133,8 @@ def get_injury_adjusted_probabilities(base_home_prob: float, home_injuries: list
         dict with adjusted probabilities and explanation
     """
     adjustment = calculate_injury_win_prob_adjustment(
-        home_injuries, away_injuries, home_team, away_team
+        home_injuries, away_injuries, home_team, away_team,
+        model_home_prob, market_home_prob
     )
     
     # Apply adjustment
