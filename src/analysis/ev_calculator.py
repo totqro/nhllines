@@ -8,30 +8,64 @@ from src.data.odds_fetcher import american_to_decimal, american_to_implied_prob
 from scipy import stats
 
 
-def _calculate_total_probability(expected_total: float, line: float, is_over: bool) -> float:
+def _calculate_total_probability(expected_total: float, line: float, is_over: bool, 
+                                main_line: float = None, blended_over: float = None, blended_under: float = None) -> float:
     """
     Calculate probability of over/under for a given total line.
-    Uses Poisson distribution based on expected total goals.
+    
+    If we have blended probabilities for a nearby line, adjust from there.
+    Otherwise, use Poisson distribution.
     
     Args:
         expected_total: Model's predicted total goals
         line: The total line (e.g., 5.5, 6.0, 6.5)
         is_over: True for Over, False for Under
+        main_line: The line the model was trained on (optional)
+        blended_over: Blended over probability for main line (optional)
+        blended_under: Blended under probability for main line (optional)
     
     Returns:
         Probability of the bet winning
     """
-    # Use Poisson distribution for goal scoring
-    # For NHL, goals follow roughly a Poisson distribution
+    # If we have blended probs for a nearby line, adjust from there
+    if main_line is not None and blended_over is not None and blended_under is not None:
+        line_diff = line - main_line
+        
+        # For small differences (0.5 goals), adjust the blended probability
+        if abs(line_diff) <= 1.0:
+            # Use Poisson to estimate the probability shift
+            # P(X > line) vs P(X > main_line)
+            lambda_param = expected_total
+            
+            if is_over:
+                # Probability of scoring more than this line
+                prob_this_line = 1 - stats.poisson.cdf(int(line), lambda_param)
+                prob_main_line = 1 - stats.poisson.cdf(int(main_line), lambda_param)
+                
+                # Adjust blended probability proportionally
+                if prob_main_line > 0:
+                    adjustment_factor = prob_this_line / prob_main_line
+                    return blended_over * adjustment_factor
+                else:
+                    return prob_this_line
+            else:
+                # Probability of scoring less than this line
+                prob_this_line = stats.poisson.cdf(int(line), lambda_param)
+                prob_main_line = stats.poisson.cdf(int(main_line), lambda_param)
+                
+                # Adjust blended probability proportionally
+                if prob_main_line > 0:
+                    adjustment_factor = prob_this_line / prob_main_line
+                    return blended_under * adjustment_factor
+                else:
+                    return prob_this_line
+    
+    # Fall back to pure Poisson if no blended data
     lambda_param = expected_total
     
     if is_over:
-        # P(X > line) = 1 - P(X <= line)
-        # For line 5.5, we need P(X >= 6)
         prob = 1 - stats.poisson.cdf(int(line), lambda_param)
     else:
-        # P(X < line) = P(X <= floor(line))
-        # For line 5.5, we need P(X <= 5)
         prob = stats.poisson.cdf(int(line), lambda_param)
     
     return prob
@@ -85,6 +119,10 @@ def _evaluate_all_total_lines(
     
     # Evaluate each line
     for line, sides in lines_data.items():
+        # Only evaluate lines ending in .5 (standard NHL totals, no push)
+        if line % 1 != 0.5:
+            continue
+        
         # Use blended probs if this is the main line, otherwise use Poisson
         if main_line and abs(line - main_line) < 0.1:
             # This is the main line - use blended probabilities
