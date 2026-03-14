@@ -5,6 +5,139 @@ Outputs ranked recommendations.
 """
 
 from src.data.odds_fetcher import american_to_decimal, american_to_implied_prob
+from scipy import stats
+
+
+def _calculate_total_probability(expected_total: float, line: float, is_over: bool) -> float:
+    """
+    Calculate probability of over/under for a given total line.
+    Uses Poisson distribution based on expected total goals.
+    
+    Args:
+        expected_total: Model's predicted total goals
+        line: The total line (e.g., 5.5, 6.0, 6.5)
+        is_over: True for Over, False for Under
+    
+    Returns:
+        Probability of the bet winning
+    """
+    # Use Poisson distribution for goal scoring
+    # For NHL, goals follow roughly a Poisson distribution
+    lambda_param = expected_total
+    
+    if is_over:
+        # P(X > line) = 1 - P(X <= line)
+        # For line 5.5, we need P(X >= 6)
+        prob = 1 - stats.poisson.cdf(int(line), lambda_param)
+    else:
+        # P(X < line) = P(X <= floor(line))
+        # For line 5.5, we need P(X <= 5)
+        prob = stats.poisson.cdf(int(line), lambda_param)
+    
+    return prob
+
+
+def _evaluate_all_total_lines(
+    game_label: str,
+    blended_probs: dict,
+    best_odds: dict,
+    stake: float,
+    min_edge: float,
+    max_edge: float,
+    confidence: float,
+) -> list:
+    """
+    Evaluate all available total lines across all books.
+    Uses blended probabilities for the main line, Poisson for others.
+    Returns list of +EV total bets.
+    """
+    total_bets = []
+    expected_total = blended_probs.get("expected_total", 6.0)
+    main_line = blended_probs.get("total_line")  # The line the model was trained on
+    
+    # Collect all unique total lines with their best odds
+    lines_data = {}  # {line: {"over": {book, odds}, "under": {book, odds}}}
+    
+    for book, book_odds in best_odds.get("all_books", {}).items():
+        # Check for over
+        if "total_over" in book_odds:
+            line = book_odds["total_over"]["point"]
+            odds = book_odds["total_over"]["price"]
+            
+            if line not in lines_data:
+                lines_data[line] = {"over": None, "under": None}
+            
+            # Keep best odds for this line
+            if lines_data[line]["over"] is None or odds > lines_data[line]["over"]["odds"]:
+                lines_data[line]["over"] = {"book": book, "odds": odds}
+        
+        # Check for under
+        if "total_under" in book_odds:
+            line = book_odds["total_under"]["point"]
+            odds = book_odds["total_under"]["price"]
+            
+            if line not in lines_data:
+                lines_data[line] = {"over": None, "under": None}
+            
+            # Keep best odds for this line
+            if lines_data[line]["under"] is None or odds > lines_data[line]["under"]["odds"]:
+                lines_data[line]["under"] = {"book": book, "odds": odds}
+    
+    # Evaluate each line
+    for line, sides in lines_data.items():
+        # Use blended probs if this is the main line, otherwise use Poisson
+        if main_line and abs(line - main_line) < 0.1:
+            # This is the main line - use blended probabilities
+            over_prob = blended_probs.get("over_prob", 0.5)
+            under_prob = blended_probs.get("under_prob", 0.5)
+        else:
+            # Different line - calculate using Poisson
+            over_prob = _calculate_total_probability(expected_total, line, is_over=True)
+            under_prob = _calculate_total_probability(expected_total, line, is_over=False)
+        
+        # Evaluate Over
+        if sides["over"]:
+            ev_data = calculate_ev(
+                true_prob=over_prob,
+                american_odds=sides["over"]["odds"],
+                stake=stake,
+            )
+            
+            if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
+                total_bets.append({
+                    "game": game_label,
+                    "bet_type": "Total",
+                    "pick": f"Over {line}",
+                    "book": sides["over"]["book"],
+                    "odds": sides["over"]["odds"],
+                    **ev_data,
+                    "confidence": confidence,
+                    "line": line,
+                    "expected_total": expected_total,
+                })
+        
+        # Evaluate Under
+        if sides["under"]:
+            ev_data = calculate_ev(
+                true_prob=under_prob,
+                american_odds=sides["under"]["odds"],
+                stake=stake,
+            )
+            
+            if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
+                total_bets.append({
+                    "game": game_label,
+                    "bet_type": "Total",
+                    "pick": f"Under {line}",
+                    "book": sides["under"]["book"],
+                    "odds": sides["under"]["odds"],
+                    **ev_data,
+                    "confidence": confidence,
+                    "line": line,
+                    "expected_total": expected_total,
+                })
+    
+    return total_bets
 
 
 def calculate_ev(
@@ -182,56 +315,16 @@ def evaluate_all_bets(
             bets.append(away_spread_bet)
 
     # --- TOTAL BETS ---
-    # Evaluate both but only keep the one with higher edge (if any)
-    over_bet = None
-    under_bet = None
+    # Evaluate ALL available total lines across all books
+    # Find the line that maximizes EV based on model's expected total
+    total_bets_by_line = _evaluate_all_total_lines(
+        game_label, blended_probs, best_odds, stake, min_edge, max_edge, confidence
+    )
     
-    if best_odds["total"]["over"]:
-        point = best_odds["total"]["over"]["point"]
-        ev_data = calculate_ev(
-            true_prob=blended_probs["over_prob"],
-            american_odds=best_odds["total"]["over"]["price"],
-            stake=stake,
-        )
-        if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-            over_bet = {
-                "game": game_label,
-                "bet_type": "Total",
-                "pick": f"Over {point}",
-                "book": best_odds["total"]["over"]["book"],
-                "odds": best_odds["total"]["over"]["price"],
-                **ev_data,
-                "confidence": confidence,
-            }
-
-    if best_odds["total"]["under"]:
-        point = best_odds["total"]["under"]["point"]
-        ev_data = calculate_ev(
-            true_prob=blended_probs["under_prob"],
-            american_odds=best_odds["total"]["under"]["price"],
-            stake=stake,
-        )
-        if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-            under_bet = {
-                "game": game_label,
-                "bet_type": "Total",
-                "pick": f"Under {point}",
-                "book": best_odds["total"]["under"]["book"],
-                "odds": best_odds["total"]["under"]["price"],
-                **ev_data,
-                "confidence": confidence,
-            }
-    
-    # Only add the total bet with higher edge (don't recommend both over and under)
-    if over_bet and under_bet:
-        if over_bet["edge"] > under_bet["edge"]:
-            bets.append(over_bet)
-        else:
-            bets.append(under_bet)
-    elif over_bet:
-        bets.append(over_bet)
-    elif under_bet:
-        bets.append(under_bet)
+    # Only keep the best total bet (highest EV)
+    if total_bets_by_line:
+        best_total = max(total_bets_by_line, key=lambda b: b["ev"])
+        bets.append(best_total)
 
     # Also evaluate theScore specifically if available
     bets.extend(_evaluate_thescore_odds(
