@@ -29,7 +29,7 @@ function showTab(tabName) {
 // Load and display NHL betting analysis
 async function loadAnalysis() {
     try {
-        const response = await fetch('latest_analysis.json');
+        const response = await fetch(`latest_analysis.json?v=${Date.now()}`);
         if (!response.ok) {
             throw new Error(`Failed to load data: ${response.status} ${response.statusText}`);
         }
@@ -82,7 +82,7 @@ function displayPerformance(results, history) {
     document.getElementById('perf-roi').textContent = `${roi}%`;
     document.getElementById('perf-profit').textContent = `$${totalProfit.toFixed(2)}`;
 
-    const expectedGain = resolvedBets.reduce((sum, r) => sum + r.bet.ev, 0);
+    const expectedGain = resolvedBets.reduce((sum, r) => sum + (r.bet.stake * r.bet.roi), 0);
     const difference = totalProfit - expectedGain;
 
     document.getElementById('expected-gain').textContent = `$${expectedGain.toFixed(2)}`;
@@ -94,6 +94,7 @@ function displayPerformance(results, history) {
 
     displayGradePerformance(resolvedBets);
     displayRecentResults(resolvedBets);
+    displayProfitChart(resolvedBets);
 }
 
 function displayGradePerformance(resolvedBets) {
@@ -141,13 +142,15 @@ function displayGradePerformance(resolvedBets) {
 function displayRecentResults(resolvedBets) {
     const container = document.getElementById('recent-results-list');
     const sorted = [...resolvedBets].sort((a, b) => {
-        return new Date(b.checked_at || b.bet.analysis_timestamp || 0) -
-               new Date(a.checked_at || a.bet.analysis_timestamp || 0);
+        return new Date(b.bet.analysis_timestamp || b.checked_at || 0) -
+               new Date(a.bet.analysis_timestamp || a.checked_at || 0);
     });
-    container.innerHTML = sorted.slice(0, 10).map(r => {
+    container.innerHTML = sorted.slice(0, 20).map(r => {
         const grade = getGrade(r.bet.edge);
         const gc = getGradeClass(grade);
         const icon = r.result === 'won' ? '✅' : '❌';
+        const betDate = new Date(r.bet.analysis_timestamp || r.checked_at);
+        const dateStr = betDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         return `
             <div class="result-item">
                 <div class="result-icon">${icon}</div>
@@ -155,12 +158,196 @@ function displayRecentResults(resolvedBets) {
                     <div class="result-pick">${r.bet.pick}</div>
                     <div class="result-game">${r.bet.game}</div>
                 </div>
+                <div class="result-date">${dateStr}</div>
                 <div class="result-grade ${gc}">${grade}</div>
                 <div class="result-profit ${r.profit >= 0 ? 'positive' : 'negative'}">
                     ${r.profit >= 0 ? '+' : ''}$${r.profit.toFixed(2)}
                 </div>
             </div>`;
     }).join('');
+}
+
+let profitChartInstance = null;
+let allSortedBets = []; // Store all bets for range filtering
+
+function displayProfitChart(resolvedBets) {
+    // Sort all bets chronologically and store globally
+    allSortedBets = [...resolvedBets].sort((a, b) => {
+        const dateA = new Date(a.checked_at || a.bet.analysis_timestamp || 0);
+        const dateB = new Date(b.checked_at || b.bet.analysis_timestamp || 0);
+        return dateA - dateB;
+    });
+
+    renderProfitChart(allSortedBets);
+}
+
+function setChartRange(range) {
+    // Update active button
+    document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.range-btn[data-range="${range}"]`).classList.add('active');
+
+    if (range === 'all' || allSortedBets.length === 0) {
+        renderProfitChart(allSortedBets);
+        return;
+    }
+
+    const now = new Date();
+    let cutoff;
+    if (range === 'day') {
+        cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    } else if (range === 'week') {
+        cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (range === 'month') {
+        cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    // For filtered views, we need cumulative profit UP TO the cutoff as the starting point
+    // Then show only bets within the range
+    let priorProfit = 0;
+    let priorExpected = 0;
+    const filtered = [];
+
+    allSortedBets.forEach(r => {
+        const betDate = new Date(r.checked_at || r.bet.analysis_timestamp || 0);
+        if (betDate < cutoff) {
+            priorProfit += r.profit;
+            priorExpected += (r.bet.stake * r.bet.roi);
+        } else {
+            filtered.push(r);
+        }
+    });
+
+    renderProfitChart(filtered, priorProfit, priorExpected);
+}
+
+function renderProfitChart(bets, startingProfit = 0, startingExpected = 0) {
+    const canvas = document.getElementById('profit-chart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    if (bets.length === 0) {
+        if (profitChartInstance) profitChartInstance.destroy();
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#6B7A8D';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No bets in this time range', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    let cumProfit = startingProfit;
+    let cumExpected = startingExpected;
+    const labels = [];
+    const profitData = [];
+    const expectedData = [];
+    const colors = [];
+
+    bets.forEach((r, i) => {
+        cumProfit += r.profit;
+        cumExpected += (r.bet.stake * r.bet.roi);
+        const date = new Date(r.checked_at || r.bet.analysis_timestamp);
+        // Show date for context
+        const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        labels.push(label);
+        profitData.push(parseFloat(cumProfit.toFixed(2)));
+        expectedData.push(parseFloat(cumExpected.toFixed(2)));
+        colors.push(r.result === 'won' ? '#00C896' : '#FF4D6A');
+    });
+
+    // Destroy previous chart if exists
+    if (profitChartInstance) {
+        profitChartInstance.destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+    // Store bets reference for tooltip
+    const chartBets = bets;
+    profitChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Actual Profit',
+                    data: profitData,
+                    borderColor: '#007C85',
+                    backgroundColor: 'rgba(0, 124, 133, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointBackgroundColor: colors,
+                    pointBorderColor: colors,
+                    pointBorderWidth: 0,
+                },
+                {
+                    label: 'Expected (EV)',
+                    data: expectedData,
+                    borderColor: '#F4901E',
+                    borderDash: [6, 3],
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0.3,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#B8C4D0',
+                        font: { size: 12 },
+                        usePointStyle: true,
+                        padding: 16,
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(20, 25, 35, 0.95)',
+                    titleColor: '#E8EDF2',
+                    bodyColor: '#B8C4D0',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    padding: 10,
+                    callbacks: {
+                        afterBody: function(context) {
+                            const idx = context[0].dataIndex;
+                            const bet = chartBets[idx];
+                            if (!bet) return '';
+                            const icon = bet.result === 'won' ? 'W' : 'L';
+                            return `${icon}: ${bet.bet.pick} (${bet.bet.game})\nP/L: ${bet.profit >= 0 ? '+' : ''}$${bet.profit.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#6B7A8D', font: { size: 10 }, maxRotation: 45 },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                },
+                y: {
+                    ticks: {
+                        color: '#6B7A8D',
+                        callback: (v) => `$${v.toFixed(2)}`,
+                    },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    title: {
+                        display: true,
+                        text: 'Cumulative Profit ($)',
+                        color: '#6B7A8D',
+                    }
+                }
+            }
+        }
+    });
 }
 
 function displayNoPerformanceData() {
@@ -201,19 +388,15 @@ function displayAnalysis(data) {
 
     // Store globals
     allRecommendations = data.recommendations;
-<<<<<<< HEAD
-    
-    // Populate book filter with available books
-    populateBookFilter(allRecommendations);
-    
-    // Setup filter listeners
-=======
     currentStake = data.stake || 1.0;
     allOddsData = data.all_odds || {};
 
->>>>>>> claude/peaceful-hypatia
+    // Populate book filter with available books
+    populateBookFilter(allRecommendations);
+
+    // Setup filter listeners
     setupFilters();
-    displayRecommendations(allRecommendations, data.stake);
+    displayRecommendations(allRecommendations, currentStake);
     displayGames(data.games_analyzed);
 }
 
@@ -228,15 +411,12 @@ function setupFilters() {
         currentFilters.type = e.target.value;
         applyFilters();
     });
-<<<<<<< HEAD
-    
+
     document.getElementById('filter-book').addEventListener('change', (e) => {
         currentFilters.book = e.target.value;
         applyFilters();
     });
-    
-=======
->>>>>>> claude/peaceful-hypatia
+
     document.getElementById('sort-by').addEventListener('change', (e) => {
         currentFilters.sortBy = e.target.value;
         applyFilters();
@@ -251,16 +431,13 @@ function applyFilters() {
     if (currentFilters.type !== 'all') {
         filtered = filtered.filter(bet => bet.bet_type === currentFilters.type);
     }
-<<<<<<< HEAD
-    
+
     // Filter by book
     if (currentFilters.book !== 'all') {
         filtered = filtered.filter(bet => bet.book === currentFilters.book);
     }
-    
+
     // Sort
-=======
->>>>>>> claude/peaceful-hypatia
     if (currentFilters.sortBy === 'edge') {
         filtered.sort((a, b) => b.edge - a.edge);
     } else if (currentFilters.sortBy === 'roi') {
@@ -281,10 +458,10 @@ function applyFilters() {
 function populateBookFilter(recommendations) {
     const bookSelect = document.getElementById('filter-book');
     const books = [...new Set(recommendations.map(bet => bet.book))].sort();
-    
+
     // Clear existing options except "All Books"
     bookSelect.innerHTML = '<option value="all">All Books</option>';
-    
+
     // Add theScore first if it exists
     if (books.includes('thescore')) {
         const option = document.createElement('option');
@@ -292,7 +469,7 @@ function populateBookFilter(recommendations) {
         option.textContent = 'theScore Bet';
         bookSelect.appendChild(option);
     }
-    
+
     // Add other books
     books.filter(book => book !== 'thescore').forEach(book => {
         const option = document.createElement('option');
@@ -300,239 +477,6 @@ function populateBookFilter(recommendations) {
         option.textContent = formatBookName(book);
         bookSelect.appendChild(option);
     });
-}
-
-function formatBookName(book) {
-    const bookNames = {
-        'thescore': 'theScore Bet',
-        'draftkings': 'DraftKings',
-        'fanduel': 'FanDuel',
-        'betmgm': 'BetMGM',
-        'caesars': 'Caesars',
-        'pointsbet': 'PointsBet',
-        'betrivers': 'BetRivers',
-        'wynnbet': 'WynnBET',
-        'unibet': 'Unibet',
-        'espnbet': 'ESPN BET',
-        'ballybet': 'Bally Bet',
-        'hardrockbet': 'Hard Rock Bet',
-        'bovada': 'Bovada'
-    };
-    return bookNames[book] || book.charAt(0).toUpperCase() + book.slice(1);
-}
-
-function displayRecommendations(recommendations, stake) {
-    const container = document.getElementById('recommendations-list');
-
-    if (recommendations.length === 0) {
-        container.innerHTML = `<div class="no-data" style="padding:24px;">
-            <p style="color:var(--text-muted);">No +EV bets match your criteria.</p>
-        </div>`;
-        return;
-    }
-
-<<<<<<< HEAD
-    // Group recommendations by game and pick to find all available books
-    const betGroups = {};
-    recommendations.forEach(bet => {
-        const key = `${bet.game}|${bet.pick}`;
-        if (!betGroups[key]) {
-            betGroups[key] = [];
-        }
-        betGroups[key].push(bet);
-    });
-
-    // Don't sort here - sorting is handled by applyFilters()
-    container.innerHTML = recommendations.map((bet, index) => {
-        const grade = getGrade(bet.edge);
-        const gradeClass = getGradeClass(grade);
-        const betKey = `${bet.game}|${bet.pick}`;
-        const allBooksForBet = betGroups[betKey] || [bet];
-
-        // Sort books by odds (best first)
-        const sortedBooks = [...allBooksForBet].sort((a, b) => b.odds - a.odds);
-        const bestBook = sortedBooks[0];
-=======
-    container.innerHTML = recommendations.map((bet) => {
-        const grade = getGrade(bet.edge);
-        const gradeClass = getGradeClass(grade);
-        const lineShoppingHtml = renderLineShopping(bet);
->>>>>>> claude/peaceful-hypatia
-
-        return `
-            <div class="bet-card">
-                <div class="bet-header">
-                    <div>
-                        <span class="grade ${gradeClass}">${grade}</span>
-                        <span class="bet-pick">${bet.pick}</span>
-                    </div>
-<<<<<<< HEAD
-                    ${sortedBooks.length > 1 ? `<button class="odds-toggle" onclick="toggleOddsDropdown(${index})">📊 ${sortedBooks.length} Books</button>` : ''}
-=======
-                    <span style="font-size:0.78rem;color:var(--text-muted);font-weight:500;">${bet.game}</span>
-                </div>
-                <div class="bet-key-metrics">
-                    <div class="key-metric">
-                        <div class="key-metric-label">Edge</div>
-                        <div class="key-metric-value edge-val">${(bet.edge * 100).toFixed(1)}%</div>
-                    </div>
-                    <div class="key-metric">
-                        <div class="key-metric-label">ROI</div>
-                        <div class="key-metric-value roi-val">${(bet.roi * 100).toFixed(1)}%</div>
-                    </div>
-                    <div class="key-metric">
-                        <div class="key-metric-label">EV / $${stake.toFixed(2)}</div>
-                        <div class="key-metric-value ev-val">$${bet.ev.toFixed(2)}</div>
-                    </div>
-                    <div class="key-metric">
-                        <div class="key-metric-label">Best Odds</div>
-                        <div class="key-metric-value odds-val">${bet.odds > 0 ? '+' : ''}${bet.odds}</div>
-                    </div>
->>>>>>> claude/peaceful-hypatia
-                </div>
-
-                <!-- Primary metrics row - Key decision factors -->
-                <div class="bet-details">
-                    <div class="detail-item detail-key">
-                        <span class="detail-label">Edge</span>
-                        <span class="detail-value positive">${(bet.edge * 100).toFixed(1)}%</span>
-                    </div>
-                    <div class="detail-item detail-key">
-                        <span class="detail-label">ROI</span>
-                        <span class="detail-value positive">${(bet.roi * 100).toFixed(1)}%</span>
-                    </div>
-                    <div class="detail-item detail-key">
-                        <span class="detail-label">EV per $${stake}</span>
-                        <span class="detail-value positive">$${bet.ev.toFixed(3)}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Odds</span>
-                        <span class="detail-value">${bet.odds > 0 ? '+' : ''}${bet.odds}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Book</span>
-                        <span class="detail-value">${formatBookName(bet.book)}</span>
-                    </div>
-                </div>
-
-                <!-- Odds comparison dropdown -->
-                ${sortedBooks.length > 1 ? `
-                <div class="odds-dropdown" id="odds-dropdown-${index}" style="display: none;">
-                    <div class="odds-dropdown-header">
-                        <span>${bet.game}</span>
-                        <span class="odds-dropdown-subtitle">Bet Type: ${bet.bet_type}</span>
-                    </div>
-                    <div class="odds-list">
-                        ${sortedBooks.map((bookBet, bookIndex) => `
-                            <div class="odds-item ${bookIndex === 0 ? 'best-odds' : ''}">
-                                <span class="odds-book">${formatBookName(bookBet.book)}</span>
-                                <span class="odds-price">${bookBet.odds > 0 ? '+' : ''}${bookBet.odds}</span>
-                                ${bookIndex === 0 ? '<span class="best-badge">⭐ BEST</span>' : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                ` : ''}
-
-                <!-- Secondary metrics row - Supporting information -->
-                <div class="bet-details-secondary">
-                    <div class="detail-item">
-                        <span class="detail-label">Type</span>
-                        <span class="detail-value">${bet.bet_type}</span>
-                    </div>
-                    <div class="detail-item">
-<<<<<<< HEAD
-=======
-                        <span class="detail-label">Best Book</span>
-                        <span class="detail-value">${bet.book}</span>
-                    </div>
-                    <div class="detail-item">
->>>>>>> claude/peaceful-hypatia
-                        <span class="detail-label">Model Prob</span>
-                        <span class="detail-value">${(bet.true_prob * 100).toFixed(1)}%</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Implied Prob</span>
-                        <span class="detail-value">${(bet.implied_prob * 100).toFixed(1)}%</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Confidence</span>
-                        <span class="detail-value">${(bet.confidence * 100).toFixed(0)}%</span>
-                    </div>
-                </div>
-                ${lineShoppingHtml}
-            </div>`;
-    }).join('');
-}
-
-<<<<<<< HEAD
-function toggleOddsDropdown(index) {
-    const dropdown = document.getElementById(`odds-dropdown-${index}`);
-    if (dropdown) {
-        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-    }
-=======
-function renderLineShopping(bet) {
-    // Build line shopping from all_odds data or from bet.all_book_odds
-    const bookOdds = bet.all_book_odds || {};
-    const gameOdds = allOddsData[bet.game] || {};
-
-    // Merge sources: prefer bet-level data, fall back to game-level
-    let oddsMap = {};
-
-    // Try to extract relevant odds from game-level data
-    if (gameOdds && bet.bet_type) {
-        const type = bet.bet_type.toLowerCase();
-        if (type === 'moneyline' && gameOdds.moneyline) {
-            // Determine which side from the pick
-            const isHome = bet.pick.includes('ML') && !bet.pick.includes('(theScore)');
-            const side = bet.pick.includes(bet.game.split(' @ ')[1]) ? 'home' : 'away';
-            if (gameOdds.moneyline[side]) {
-                Object.entries(gameOdds.moneyline[side]).forEach(([book, price]) => {
-                    oddsMap[book] = price;
-                });
-            }
-        }
-    }
-
-    // Override with bet-specific data if available
-    Object.entries(bookOdds).forEach(([book, price]) => {
-        oddsMap[book] = price;
-    });
-
-    // If no multi-book data, show single book
-    if (Object.keys(oddsMap).length === 0) {
-        oddsMap[bet.book] = bet.odds;
-    }
-
-    // Sort by odds (best first)
-    const sorted = Object.entries(oddsMap).sort((a, b) => b[1] - a[1]);
-    const bestOdds = sorted[0][1];
-
-    if (sorted.length <= 1) {
-        return ''; // No line shopping to show with only 1 book
-    }
-
-    return `
-        <div class="line-shopping">
-            <div class="line-shopping-header">
-                <span class="line-shopping-title">Line Shopping</span>
-            </div>
-            <div class="line-shopping-grid">
-                ${sorted.map(([book, odds]) => {
-                    const isBest = odds === bestOdds;
-                    const displayBook = formatBookName(book);
-                    return `
-                        <div class="line-shop-item ${isBest ? 'best-odds' : ''}">
-                            <span class="line-shop-book">${displayBook}</span>
-                            <span>
-                                <span class="line-shop-odds">${odds > 0 ? '+' : ''}${odds}</span>
-                                ${isBest ? '<span class="line-shop-best-tag">Best</span>' : ''}
-                            </span>
-                        </div>`;
-                }).join('')}
-            </div>
-        </div>`;
 }
 
 function formatBookName(book) {
@@ -560,9 +504,138 @@ function formatBookName(book) {
         'fanatics': 'Fanatics',
         'fliff': 'Fliff',
         'hardrock': 'Hard Rock',
+        'ballybet': 'Bally Bet',
+        'hardrockbet': 'Hard Rock Bet',
     };
     return names[book.toLowerCase()] || book.charAt(0).toUpperCase() + book.slice(1);
->>>>>>> claude/peaceful-hypatia
+}
+
+function displayRecommendations(recommendations, stake) {
+    const container = document.getElementById('recommendations-list');
+
+    if (recommendations.length === 0) {
+        container.innerHTML = `<div class="no-data" style="padding:24px;">
+            <p style="color:var(--text-muted);">No +EV bets match your criteria.</p>
+        </div>`;
+        return;
+    }
+
+    const isCompact = document.getElementById('view-toggle')?.dataset.view === 'compact';
+    container.innerHTML = recommendations.map((bet) => {
+        const grade = getGrade(bet.edge);
+        const gradeClass = getGradeClass(grade);
+        const lineShoppingHtml = isCompact ? '' : renderLineShopping(bet);
+
+        if (isCompact) {
+            return `
+            <div class="bet-card-compact">
+                <div class="compact-left">
+                    <span class="grade ${gradeClass}">${grade}</span>
+                    <span class="bet-pick">${bet.pick}</span>
+                    <span class="compact-game">${bet.game}</span>
+                </div>
+                <div class="compact-stats">
+                    <div class="compact-stat"><span class="compact-stat-label">Edge</span><span class="compact-stat-value edge-val">${(bet.edge * 100).toFixed(1)}%</span></div>
+                    <div class="compact-stat"><span class="compact-stat-label">ROI</span><span class="compact-stat-value roi-val">${(bet.roi * 100).toFixed(1)}%</span></div>
+                    <div class="compact-stat"><span class="compact-stat-label">Odds</span><span class="compact-stat-value odds-val">${bet.odds > 0 ? '+' : ''}${bet.odds}</span></div>
+                    <div class="compact-stat"><span class="compact-stat-label">Book</span><span class="compact-stat-value">${formatBookName(bet.book)}</span></div>
+                    <div class="compact-stat"><span class="compact-stat-label">Model</span><span class="compact-stat-value">${(bet.true_prob * 100).toFixed(1)}%</span></div>
+                    <div class="compact-stat"><span class="compact-stat-label">Implied</span><span class="compact-stat-value">${(bet.implied_prob * 100).toFixed(1)}%</span></div>
+                    <div class="compact-stat"><span class="compact-stat-label">Conf</span><span class="compact-stat-value">${(bet.confidence * 100).toFixed(0)}%</span></div>
+                </div>
+            </div>`;
+        }
+
+        return `
+            <div class="bet-card">
+                <div class="bet-header">
+                    <div>
+                        <span class="grade ${gradeClass}">${grade}</span>
+                        <span class="bet-pick">${bet.pick}</span>
+                    </div>
+                    <span style="font-size:0.78rem;color:var(--text-muted);font-weight:500;">${bet.game}</span>
+                </div>
+                <div class="bet-key-metrics">
+                    <div class="key-metric">
+                        <div class="key-metric-label">Edge</div>
+                        <div class="key-metric-value edge-val">${(bet.edge * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="key-metric">
+                        <div class="key-metric-label">ROI</div>
+                        <div class="key-metric-value roi-val">${(bet.roi * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="key-metric">
+                        <div class="key-metric-label">EV / $${stake.toFixed(2)}</div>
+                        <div class="key-metric-value ev-val">$${(bet.stake * bet.roi).toFixed(2)}</div>
+                    </div>
+                    <div class="key-metric">
+                        <div class="key-metric-label">Best Odds</div>
+                        <div class="key-metric-value odds-val">${bet.odds > 0 ? '+' : ''}${bet.odds}</div>
+                    </div>
+                </div>
+
+                <div class="bet-details-inline">
+                    <div class="detail-item-inline">
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value">${bet.bet_type}</span>
+                    </div>
+                    <div class="detail-item-inline">
+                        <span class="detail-label">Best Book</span>
+                        <span class="detail-value">${formatBookName(bet.book)}</span>
+                    </div>
+                    <div class="detail-item-inline">
+                        <span class="detail-label">Model Prob</span>
+                        <span class="detail-value">${(bet.true_prob * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="detail-item-inline">
+                        <span class="detail-label">Implied Prob</span>
+                        <span class="detail-value">${(bet.implied_prob * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="detail-item-inline">
+                        <span class="detail-label">Confidence</span>
+                        <span class="detail-value">${(bet.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                </div>
+                ${lineShoppingHtml}
+            </div>`;
+    }).join('');
+}
+
+function renderLineShopping(bet) {
+    // Build line shopping from all_book_odds attached by main.py
+    const bookOddsList = bet.all_book_odds || [];
+
+    if (bookOddsList.length <= 1) {
+        return ''; // No line shopping to show with only 1 book
+    }
+
+    // bookOddsList is already sorted best-first by main.py
+    const bestOdds = bookOddsList[0].odds;
+
+    return `
+        <div class="line-shopping">
+            <div class="line-shopping-header">
+                <span class="line-shopping-title">Line Shopping</span>
+            </div>
+            <div class="line-shopping-grid">
+                ${bookOddsList.map(item => {
+                    const isBest = item.odds === bestOdds;
+                    const displayBook = formatBookName(item.book);
+                    const oddsDisplay = typeof item.odds === 'number'
+                        ? `${item.odds > 0 ? '+' : ''}${item.odds}`
+                        : item.odds;
+                    const pointDisplay = item.point !== undefined ? ` (${item.point})` : '';
+                    return `
+                        <div class="line-shop-item ${isBest ? 'best-odds' : ''}">
+                            <span class="line-shop-book">${displayBook}</span>
+                            <span>
+                                <span class="line-shop-odds">${oddsDisplay}${pointDisplay}</span>
+                                ${isBest ? '<span class="line-shop-best-tag">Best</span>' : ''}
+                            </span>
+                        </div>`;
+                }).join('')}
+            </div>
+        </div>`;
 }
 
 function displayGames(games) {
@@ -578,7 +651,7 @@ function displayGames(games) {
             <div class="game-card" onclick="toggleGameDetails(${index})">
                 <div class="game-header">
                     ${game.game}
-                    ${game.n_bets > 0 ? `<span style="color:var(--sharks-orange);font-size:0.82rem;font-weight:600;"> · ${game.n_bets} +EV bet${game.n_bets > 1 ? 's' : ''}</span>` : ''}
+                    ${(game.n_bets || 0) > 0 ? `<span style="color:var(--sharks-orange);font-size:0.82rem;font-weight:600;"> · ${game.n_bets} +EV bet${game.n_bets > 1 ? 's' : ''}</span>` : ''}
                 </div>
 
                 ${renderContextIndicators(contextIndicators)}
@@ -609,22 +682,22 @@ function displayGames(games) {
                     <div class="game-stat">
                         <div class="game-stat-label">Expected Total</div>
                         <div class="game-stat-value">
-                            ${modelProbs.expected_total.toFixed(1)} goals
+                            ${modelProbs.expected_total ? modelProbs.expected_total.toFixed(1) : '-'} goals
                             ${modelProbs.total_line ? `<br><span style="font-size:0.78rem;color:var(--text-muted);">Line: ${modelProbs.total_line}</span>` : ''}
                         </div>
                     </div>
                     <div class="game-stat">
                         <div class="game-stat-label">Model Confidence</div>
                         <div class="game-stat-value">
-                            ${(modelProbs.confidence * 100).toFixed(0)}%
+                            ${((modelProbs.confidence || 0) * 100).toFixed(0)}%
                             <div class="confidence-bar">
-                                <div class="confidence-fill" style="width:${modelProbs.confidence * 100}%"></div>
+                                <div class="confidence-fill" style="width:${(modelProbs.confidence || 0) * 100}%"></div>
                             </div>
                         </div>
                     </div>
                     <div class="game-stat">
                         <div class="game-stat-label">Similar Games</div>
-                        <div class="game-stat-value">${game.n_similar} games</div>
+                        <div class="game-stat-value">${game.n_similar || modelProbs.n_games || '-'} games</div>
                     </div>
                 </div>
 
@@ -776,6 +849,15 @@ function getGrade(edge) {
 
 function getGradeClass(grade) {
     return { 'A': 'grade-a', 'B+': 'grade-b-plus', 'B': 'grade-b', 'C+': 'grade-c-plus' }[grade] || 'grade-c-plus';
+}
+
+function toggleView() {
+    const btn = document.getElementById('view-toggle');
+    const current = btn.dataset.view || 'full';
+    const next = current === 'full' ? 'compact' : 'full';
+    btn.dataset.view = next;
+    btn.textContent = next === 'compact' ? 'Full View' : 'Compact View';
+    applyFilters();
 }
 
 // Load on page load

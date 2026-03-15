@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NHL +EV Betting Finder</title>
-    <link rel="stylesheet" href="styles.css?v=3.0">
+    <link rel="stylesheet" href="styles.css?v=10.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -61,6 +62,7 @@
                 <div class="section-header">
                     <h2>Top Betting Recommendations</h2>
                     <div class="filter-controls">
+                        <button id="view-toggle" class="view-toggle-btn" data-view="full" onclick="toggleView()">Compact View</button>
                         <select id="filter-grade" class="filter-select">
                             <option value="all">All Grades</option>
                             <option value="A">A Grade</option>
@@ -126,6 +128,22 @@
                 </div>
             </section>
 
+            <!-- Profit Chart -->
+            <section class="profit-chart-section">
+                <div class="chart-header">
+                    <h2>Cumulative Profit</h2>
+                    <div class="chart-range-buttons">
+                        <button class="range-btn active" data-range="all" onclick="setChartRange('all')">All Time</button>
+                        <button class="range-btn" data-range="month" onclick="setChartRange('month')">30D</button>
+                        <button class="range-btn" data-range="week" onclick="setChartRange('week')">7D</button>
+                        <button class="range-btn" data-range="day" onclick="setChartRange('day')">24H</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="profit-chart"></canvas>
+                </div>
+            </section>
+
             <!-- Expected vs Actual -->
             <section class="performance-comparison">
                 <h2>Expected vs Actual Performance</h2>
@@ -159,6 +177,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=3.0"></script>
+    <script src="app.js?v=10.0"></script>
 </body>
 </html>

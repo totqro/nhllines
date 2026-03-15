@@ -174,75 +174,90 @@ def scrape_dailyfaceoff_goalies(date_str=None):
         
         soup = BeautifulSoup(resp.text, 'html.parser')
         
-        # DailyFaceoff structure: Look for goalie cards/rows
-        # The exact selectors may need adjustment based on current site structure
+        # DailyFaceoff 2026: Structure is:
+        # Line: "Away Team at Home Team Mar DD, YYYY | H:MM pm EDT"
+        # Next few lines: Away goalie name, status, timestamp, "SHOW MORE", ranking, links...
+        # After "Schedule": Home goalie name, status, timestamp, "SHOW MORE", ranking, links...
         
-        # Try multiple possible structures
-        goalie_elements = (
-            soup.find_all('div', class_=re.compile(r'starting.*goalie', re.I)) or
-            soup.find_all('div', class_=re.compile(r'goalie.*card', re.I)) or
-            soup.find_all('tr', class_=re.compile(r'goalie', re.I))
-        )
+        page_text = soup.get_text('\n')
+        lines = [line.strip() for line in page_text.split('\n') if line.strip()]
         
-        for elem in goalie_elements:
-            try:
-                # Extract team name
-                team_elem = (
-                    elem.find('span', class_=re.compile(r'team', re.I)) or
-                    elem.find('div', class_=re.compile(r'team', re.I)) or
-                    elem.find('a', href=re.compile(r'/teams/', re.I))
-                )
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            
+            # Check if this line contains " at " (game matchup)
+            if ' at ' in line and ('Mar' in line or 'pm EDT' in line or 'am EDT' in line):
+                # Extract team names
+                # Format: "Away Team at Home Team Mar DD, YYYY | H:MM pm EDT"
+                match = re.match(r'^(.+?)\s+at\s+(.+?)\s+(?:Mar|Apr|Oct|Nov|Dec|Jan|Feb)', line)
                 
-                if not team_elem:
-                    continue
-                
-                team_text = team_elem.get_text(strip=True)
-                team_abbrev = normalize_team_name(team_text)
-                
-                # Extract goalie name
-                name_elem = (
-                    elem.find('a', class_=re.compile(r'goalie.*name', re.I)) or
-                    elem.find('span', class_=re.compile(r'player.*name', re.I)) or
-                    elem.find('a', href=re.compile(r'/players/', re.I))
-                )
-                
-                if not name_elem:
-                    continue
-                
-                goalie_name = name_elem.get_text(strip=True)
-                
-                # Extract status/confidence
-                status_elem = (
-                    elem.find('span', class_=re.compile(r'status', re.I)) or
-                    elem.find('div', class_=re.compile(r'confirm', re.I))
-                )
-                
-                status_text = status_elem.get_text(strip=True).lower() if status_elem else ''
-                
-                # Determine confidence
-                if 'confirm' in status_text:
-                    status = 'confirmed'
-                    confidence = 1.0
-                elif 'likely' in status_text or 'expect' in status_text:
-                    status = 'likely'
-                    confidence = 0.8
-                elif 'probable' in status_text or 'possible' in status_text:
-                    status = 'probable'
-                    confidence = 0.6
-                else:
-                    status = 'unknown'
-                    confidence = 0.5
-                
-                goalies[team_abbrev] = {
-                    'name': goalie_name,
-                    'status': status,
-                    'confidence': confidence,
-                    'source': 'dailyfaceoff',
-                    'last_updated': datetime.now().isoformat()
-                }
-                
-            except Exception as e:
-                continue
+                if match:
+                    away_team_name = match.group(1).strip()
+                    home_team_name = match.group(2).strip()
+                    
+                    away_abbrev = normalize_team_name(away_team_name)
+                    home_abbrev = normalize_team_name(home_team_name)
+                    
+                    # Look for away goalie (next few lines after matchup)
+                    away_goalie = None
+                    home_goalie = None
+                    found_schedule = False
+                    
+                    for j in range(i+1, min(i+40, len(lines))):
+                        check_line = lines[j]
+                        
+                        # Check if this is a goalie name (2+ capitalized words)
+                        name_match = re.match(r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)$', check_line)
+                        
+                        if name_match and j+1 < len(lines):
+                            goalie_name = name_match.group(1)
+                            next_line = lines[j+1]
+                            
+                            # Check if next line is a status
+                            if re.match(r'^(Confirmed|Likely|Probable|Expected|Unconfirmed)', next_line, re.I):
+                                status_text = next_line.lower()
+                                
+                                # Determine confidence
+                                if 'confirm' in status_text:
+                                    status = 'confirmed'
+                                    confidence = 1.0
+                                elif 'likely' in status_text:
+                                    status = 'likely'
+                                    confidence = 0.8
+                                elif 'probable' in status_text or 'expected' in status_text:
+                                    status = 'probable'
+                                    confidence = 0.7
+                                else:
+                                    status = 'unconfirmed'
+                                    confidence = 0.5
+                                
+                                goalie_info = {
+                                    'name': goalie_name,
+                                    'status': status,
+                                    'confidence': confidence,
+                                    'source': 'dailyfaceoff',
+                                    'last_updated': datetime.now().isoformat()
+                                }
+                                
+                                # Assign to away or home based on whether we've seen "Schedule" yet
+                                if not found_schedule and not away_goalie:
+                                    away_goalie = goalie_info
+                                elif found_schedule and not home_goalie:
+                                    home_goalie = goalie_info
+                                    break  # Found both goalies for this game
+                        
+                        # Check if we've reached the "Schedule" marker (separates away/home)
+                        if check_line == 'Schedule':
+                            found_schedule = True
+                    
+                    # Assign goalies to teams
+                    if away_goalie and away_abbrev:
+                        goalies[away_abbrev] = away_goalie
+                    if home_goalie and home_abbrev:
+                        goalies[home_abbrev] = home_goalie
+            
+            i += 1
         
         print(f"  ✅ Found {len(goalies)} starting goalies from DailyFaceoff")
         

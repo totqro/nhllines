@@ -228,52 +228,6 @@ header h1 {
 }
 
 .grade {
-<<<<<<< HEAD
-    display: inline-block;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 800;
-    font-size: 1.05rem;
-    border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    letter-spacing: 0.02em;
-}
-
-.grade-a {
-    background: linear-gradient(135deg, #FF4444 0%, #CC0000 100%);
-    color: white;
-    box-shadow: 
-        0 2px 8px rgba(255, 68, 68, 0.4),
-        0 4px 16px rgba(255, 68, 68, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.grade-b-plus {
-    background: linear-gradient(135deg, var(--sharks-orange) 0%, #D67A00 100%);
-    color: white;
-    box-shadow: 
-        0 2px 8px rgba(244, 144, 30, 0.4),
-        0 4px 16px rgba(244, 144, 30, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.grade-b {
-    background: linear-gradient(135deg, var(--sharks-teal-bright) 0%, var(--sharks-teal) 100%);
-    color: white;
-    box-shadow: 
-        0 2px 8px rgba(0, 168, 181, 0.4),
-        0 4px 16px rgba(0, 168, 181, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.grade-c-plus {
-    background: linear-gradient(135deg, #78909C 0%, #546E7A 100%);
-    color: white;
-    box-shadow: 
-        0 2px 8px rgba(96, 125, 139, 0.4),
-        0 4px 16px rgba(96, 125, 139, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-=======
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -283,7 +237,6 @@ header h1 {
     font-weight: 700;
     font-size: 0.72rem;
     letter-spacing: 0.02em;
->>>>>>> claude/peaceful-hypatia
 }
 .grade-a { background: rgba(239,68,68,0.15); color: #F87171; }
 .grade-b-plus { background: var(--sharks-orange-dim); color: var(--sharks-orange); }
@@ -292,87 +245,33 @@ header h1 {
 
 /* ── Bet Cards ── */
 .bet-card {
-<<<<<<< HEAD
-    background: linear-gradient(145deg, rgba(0, 56, 68, 0.95) 0%, rgba(0, 18, 25, 0.98) 100%);
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 16px;
-    box-shadow: 
-        0 2px 8px rgba(0, 0, 0, 0.3),
-        0 8px 24px rgba(0, 109, 117, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(0, 168, 181, 0.2);
-    border-left: 4px solid var(--sharks-orange);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-}
-
-.bet-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(244, 144, 30, 0.3) 50%, 
-        transparent 100%);
-=======
     background: var(--bg-card);
     border-radius: var(--radius);
     padding: 0;
-    margin-bottom: 12px;
     box-shadow: var(--shadow-card);
     border: 1px solid var(--border-subtle);
     transition: all 0.2s;
     overflow: hidden;
->>>>>>> claude/peaceful-hypatia
 }
 .bet-card:hover {
-<<<<<<< HEAD
-    transform: translateY(-2px);
-    box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.4),
-        0 12px 32px rgba(244, 144, 30, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    border-color: rgba(244, 144, 30, 0.4);
-    border-left-width: 5px;
-=======
     border-color: rgba(244,144,30,0.25);
     box-shadow: var(--shadow-hover);
->>>>>>> claude/peaceful-hypatia
 }
 
 .bet-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-<<<<<<< HEAD
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-=======
     padding: 16px 20px;
     border-bottom: 1px solid var(--border-subtle);
     background: var(--bg-inset);
->>>>>>> claude/peaceful-hypatia
 }
 .bet-header > div { display: flex; align-items: center; gap: 10px; }
 .bet-pick {
-<<<<<<< HEAD
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--sharks-white);
-    margin-left: 12px;
-    letter-spacing: -0.02em;
-=======
     font-size: 1.05rem;
     font-weight: 700;
     color: var(--text-primary);
     margin-left: 0;
->>>>>>> claude/peaceful-hypatia
 }
 
 /* Key metrics row */
@@ -409,41 +308,6 @@ header h1 {
 /* Bet details grid */
 .bet-details {
     display: grid;
-<<<<<<< HEAD
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-/* Key metrics - larger and more prominent */
-.detail-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    transition: all 0.2s;
-}
-
-.detail-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(244, 144, 30, 0.3);
-}
-
-/* Emphasize key metrics */
-.detail-item.detail-key {
-    background: rgba(244, 144, 30, 0.12);
-    border: 1px solid rgba(244, 144, 30, 0.3);
-    box-shadow: 0 2px 8px rgba(244, 144, 30, 0.15);
-}
-
-.detail-item.detail-key:hover {
-    background: rgba(244, 144, 30, 0.18);
-    border-color: rgba(244, 144, 30, 0.5);
-    box-shadow: 0 3px 12px rgba(244, 144, 30, 0.25);
-=======
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 0;
     padding: 0;
@@ -457,73 +321,122 @@ header h1 {
     border-bottom: 1px solid var(--border-subtle);
     background: transparent;
     border-radius: 0;
->>>>>>> claude/peaceful-hypatia
 }
 .detail-item:last-child { border-right: none; }
 .detail-label {
-<<<<<<< HEAD
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.6);
-=======
     font-size: 0.68rem;
     color: var(--text-muted);
->>>>>>> claude/peaceful-hypatia
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 600;
 }
 .detail-value {
-<<<<<<< HEAD
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
-=======
     font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-primary);
->>>>>>> claude/peaceful-hypatia
     font-variant-numeric: tabular-nums;
 }
+
+/* Inline details (side-by-side) for full view */
+.bet-details-inline {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.detail-item-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 16px;
+    flex: 1;
+    min-width: 100px;
+    border-right: 1px solid var(--border-subtle);
+}
+.detail-item-inline:last-child { border-right: none; }
+
+/* View toggle button */
+.view-toggle-btn {
+    background: var(--bg-inset);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.view-toggle-btn:hover {
+    background: var(--sharks-teal);
+    color: white;
+    border-color: var(--sharks-teal);
+}
+
+/* Compact card view */
+.bet-card-compact {
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 6px;
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s;
+}
+.bet-card-compact:hover {
+    border-color: rgba(244,144,30,0.25);
+    box-shadow: var(--shadow-hover);
+}
+.compact-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 220px;
+}
+.compact-game {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.compact-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    flex: 1;
+}
+.compact-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 12px;
+    border-right: 1px solid var(--border-subtle);
+    min-width: 70px;
+}
+.compact-stat:last-child { border-right: none; }
+.compact-stat-label {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+.compact-stat-value {
+    font-size: 0.88rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.compact-stat-value.edge-val { color: var(--sharks-orange); }
+.compact-stat-value.roi-val { color: var(--green); }
+.compact-stat-value.odds-val { color: var(--text-primary); }
 .detail-value.positive { color: var(--sharks-orange); }
 
-<<<<<<< HEAD
-.detail-value.positive {
-    color: var(--sharks-orange);
-    font-weight: 700;
-    font-size: 1.25rem;
-}
-
-/* Secondary row for less critical info */
-.bet-details-secondary {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    padding-top: 12px;
-    margin-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.bet-details-secondary .detail-item {
-    background: rgba(255, 255, 255, 0.02);
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.bet-details-secondary .detail-label {
-    font-size: 0.65rem;
-    opacity: 0.7;
-}
-
-.bet-details-secondary .detail-value {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.85);
-=======
 /* ── Line Shopping Panel ── */
 .line-shopping {
     padding: 16px 20px;
     background: var(--bg-inset);
     border-top: 1px solid var(--border-subtle);
->>>>>>> claude/peaceful-hypatia
 }
 .line-shopping-header {
     display: flex;
@@ -789,7 +702,7 @@ header h1 {
     padding: 12px 16px;
     margin-bottom: 6px;
     display: grid;
-    grid-template-columns: 36px 1fr auto auto;
+    grid-template-columns: 36px 1fr auto auto auto;
     gap: 12px;
     align-items: center;
     border: 1px solid var(--border-subtle);
@@ -798,6 +711,7 @@ header h1 {
 .result-details { display: flex; flex-direction: column; gap: 2px; }
 .result-pick { font-weight: 600; color: var(--text-primary); font-size: 0.92rem; }
 .result-game { font-size: 0.78rem; color: var(--text-muted); }
+.result-date { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; white-space: nowrap; }
 .result-profit { font-size: 1.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .result-profit.positive { color: var(--green); }
 .result-profit.negative { color: var(--red); }
@@ -826,63 +740,7 @@ header h1 {
     to { opacity: 1; transform: translateY(0); }
 }
 
-<<<<<<< HEAD
-/* Responsive */
-@media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-    
-    header h1 {
-        font-size: 2rem;
-    }
-    
-    .tabs {
-        overflow-x: auto;
-    }
-    
-    .tab-button {
-        padding: 1rem 1.5rem;
-        font-size: 1rem;
-        white-space: nowrap;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .comparison-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .grade-performance-item {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-    
-    .result-item {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 0.75rem;
-    }
-    
-    .bet-details {
-        grid-template-columns: 1fr;
-    }
-    
-    .bet-details-secondary {
-        grid-template-columns: 1fr;
-    }
-    
-    .game-stats {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Filter Controls */
-=======
 /* ── Filter Controls ── */
->>>>>>> claude/peaceful-hypatia
 .section-header {
     display: flex;
     justify-content: space-between;
@@ -903,6 +761,13 @@ header h1 {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238896AB' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
 }
 .filter-select:hover { border-color: var(--sharks-teal); color: var(--text-primary); }
 .filter-select:focus { outline: none; border-color: var(--sharks-teal-bright); box-shadow: 0 0 0 2px rgba(0,180,197,0.15); }
@@ -1027,6 +892,11 @@ header h1 {
     .stats-grid, .comparison-grid { grid-template-columns: 1fr 1fr; }
     .grade-performance-item { grid-template-columns: 1fr; text-align: center; }
     .result-item { grid-template-columns: 1fr; text-align: center; gap: 8px; }
+    .bet-details-inline { flex-direction: column; }
+    .detail-item-inline { border-right: none; border-bottom: 1px solid var(--border-subtle); }
+    .bet-card-compact { flex-direction: column; align-items: flex-start; }
+    .compact-left { min-width: auto; }
+    .compact-stats { width: 100%; }
     .bet-key-metrics { flex-wrap: wrap; }
     .key-metric { min-width: 50%; border-bottom: 1px solid var(--border-subtle); }
     .bet-details { grid-template-columns: 1fr 1fr; }
@@ -1046,120 +916,67 @@ header h1 {
     .line-shopping-grid { grid-template-columns: 1fr; }
 }
 
-/* Odds Toggle Button */
-.odds-toggle {
-    background: linear-gradient(135deg, var(--sharks-teal) 0%, var(--sharks-teal-bright) 100%);
-    color: var(--sharks-white);
-    border: 2px solid var(--sharks-orange);
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s;
+/* Profit Chart */
+.profit-chart-section {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-subtle);
+}
+
+.chart-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-.odds-toggle:hover {
-    background: linear-gradient(135deg, var(--sharks-orange) 0%, #D67A00 100%);
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(244, 144, 30, 0.4);
-}
-
-/* Odds Dropdown */
-.odds-dropdown {
-    margin-top: 16px;
-    padding: 16px;
-    background: rgba(0, 109, 117, 0.15);
-    border-radius: 10px;
-    border: 2px solid rgba(244, 144, 30, 0.3);
-    animation: slideDown 0.3s ease;
-}
-
-.odds-dropdown-header {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid rgba(244, 144, 30, 0.3);
-}
-
-.odds-dropdown-header span:first-child {
+.chart-header h2 {
+    color: var(--text-primary);
     font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--sharks-white);
+    margin: 0;
 }
 
-.odds-dropdown-subtitle {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 600;
-}
-
-.odds-list {
+.chart-range-buttons {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.odds-item {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    background: rgba(255, 255, 255, 0.05);
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s;
+    padding: 3px;
 }
 
-.odds-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(244, 144, 30, 0.3);
-}
-
-.odds-item.best-odds {
-    background: rgba(244, 144, 30, 0.15);
-    border: 2px solid rgba(244, 144, 30, 0.5);
-    box-shadow: 0 2px 8px rgba(244, 144, 30, 0.2);
-}
-
-.odds-book {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--sharks-white);
-}
-
-.odds-price {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--sharks-orange);
-    font-variant-numeric: tabular-nums;
-}
-
-.best-badge {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--sharks-orange);
-    padding: 4px 10px;
-    background: rgba(244, 144, 30, 0.2);
+.range-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    padding: 5px 12px;
     border-radius: 6px;
-    border: 1px solid var(--sharks-orange);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-/* Mobile responsive for odds dropdown */
+.range-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.range-btn.active {
+    background: var(--sharks-teal);
+    color: #fff;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
 @media (max-width: 768px) {
-    .odds-item {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 6px;
-    }
-    
-    .best-badge {
-        justify-self: center;
-    }
+    .chart-container { height: 220px; }
+    .chart-header { flex-direction: column; align-items: flex-start; }
 }

@@ -1,0 +1,93 @@
+name: Daily NHL Analysis
+
+on:
+  schedule:
+    # Run at 4:00 PM ET (21:00 UTC) every day during NHL season
+    - cron: '0 21 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  analyze-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install scipy
+
+      - name: Create config from secrets
+        run: |
+          cat > config.json << EOF
+          {
+            "odds_api_key": "${{ secrets.ODDS_API_KEY }}",
+            "odds_api_key_two": "${{ secrets.ODDS_API_KEY_TWO }}",
+            "odds_api_key_three": "${{ secrets.ODDS_API_KEY_THREE }}"
+          }
+          EOF
+
+      - name: Download previous data artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nhl-data
+          path: data/
+        continue-on-error: true  # First run won't have artifacts
+
+      - name: Restore ML models
+        uses: actions/download-artifact@v4
+        with:
+          name: ml-models
+          path: ml_models/
+        continue-on-error: true
+
+      - name: Run NHL analysis
+        run: python main.py --stake 0.50
+
+      - name: Check bet results
+        run: python -c "from src.analysis.bet_tracker import check_results; check_results(days_back=7)"
+
+      - name: Build deploy folder
+        run: |
+          mkdir -p build/nhllines
+          cp web/index.html build/nhllines/
+          cp web/app.js build/nhllines/
+          cp web/styles.css build/nhllines/
+          cp data/latest_analysis.json build/nhllines/
+          cp data/bet_results.json build/nhllines/ 2>/dev/null || echo "{\"results\":{}}" > build/nhllines/bet_results.json
+          cp data/analysis_history.json build/nhllines/ 2>/dev/null || true
+
+      - name: Deploy to Firebase
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: projects-brawlstars
+
+      - name: Save data artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nhl-data
+          path: |
+            data/bet_results.json
+            data/analysis_history.json
+            data/latest_analysis.json
+          retention-days: 90
+          overwrite: true
+
+      - name: Save ML models
+        uses: actions/upload-artifact@v4
+        with:
+          name: ml-models
+          path: ml_models/
+          retention-days: 90
+          overwrite: true

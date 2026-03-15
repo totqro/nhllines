@@ -44,12 +44,14 @@ def _set_cache(key: str, data):
     path.write_text(json.dumps(data, default=str))
 
 
-def fetch_moneypuck_team_stats(season: str = "2025"):
+def fetch_moneypuck_team_stats(season: str = "20252026"):
     """
     Fetch team-level advanced stats from MoneyPuck.
     
     Returns dict with xG, HDCF, Corsi, Fenwick for all teams.
     MoneyPuck provides free API access to advanced metrics.
+    
+    Season format: "20252026" for 2025-26 season
     """
     cache_key = f"moneypuck_teams_{season}"
     cached = _get_cached(cache_key, max_age_hours=24)
@@ -57,47 +59,53 @@ def fetch_moneypuck_team_stats(season: str = "2025"):
         return cached
     
     try:
-        # Try MoneyPuck's JSON API endpoint instead of CSV
-        url = f"https://moneypuck.com/moneypuck/teams/seasonSummary/{season}/regular/teams.json"
+        # MoneyPuck CSV download endpoint (they provide CSV files, not JSON API)
+        url = f"https://moneypuck.com/moneypuck/playerData/seasonSummary/{season}/regular/teams.csv"
         
         headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json',
-            'Referer': 'https://moneypuck.com/teams.htm'
+            'Accept': 'text/csv',
+            'Referer': 'https://moneypuck.com/data.htm'
         }
         
         print(f"  Fetching MoneyPuck advanced stats...")
         resp = requests.get(url, headers=headers, timeout=15)
         resp.raise_for_status()
         
-        data = resp.json()
+        # Parse CSV data
+        import csv
+        from io import StringIO
+        
+        csv_data = StringIO(resp.text)
+        reader = csv.DictReader(csv_data)
+        
         teams_data = {}
         
-        for team_data in data:
-            team = team_data.get('team', '').upper()
+        for row in reader:
+            team = row.get('team', '').upper()
             if not team or len(team) != 3:
                 continue
             
-            # Extract key metrics
+            # Extract key metrics from CSV
             try:
                 teams_data[team] = {
-                    'xGF': float(team_data.get('xGoalsFor', 0)),
-                    'xGA': float(team_data.get('xGoalsAgainst', 0)),
-                    'xGF_per_60': float(team_data.get('xGoalsForPer60', 0)),
-                    'xGA_per_60': float(team_data.get('xGoalsAgainstPer60', 0)),
-                    'corsi_for': float(team_data.get('corsiFor', 0)),
-                    'corsi_against': float(team_data.get('corsiAgainst', 0)),
-                    'corsi_pct': float(team_data.get('corsiForPercentage', 50)),
-                    'fenwick_for': float(team_data.get('fenwickFor', 0)),
-                    'fenwick_against': float(team_data.get('fenwickAgainst', 0)),
-                    'fenwick_pct': float(team_data.get('fenwickForPercentage', 50)),
-                    'shots_for': float(team_data.get('shotsOnGoalFor', 0)),
-                    'shots_against': float(team_data.get('shotsOnGoalAgainst', 0)),
-                    'shooting_pct': float(team_data.get('shootingPct', 0)),
-                    'save_pct': float(team_data.get('savePct', 0.900)),
-                    'pdo': float(team_data.get('PDO', 100)),
+                    'xGF': float(row.get('xGoalsFor', 0)),
+                    'xGA': float(row.get('xGoalsAgainst', 0)),
+                    'xGF_per_60': float(row.get('xGoalsForPer60', 0)),
+                    'xGA_per_60': float(row.get('xGoalsAgainstPer60', 0)),
+                    'corsi_for': float(row.get('corsiFor', 0)),
+                    'corsi_against': float(row.get('corsiAgainst', 0)),
+                    'corsi_pct': float(row.get('corsiForPercentage', 50)),
+                    'fenwick_for': float(row.get('fenwickFor', 0)),
+                    'fenwick_against': float(row.get('fenwickAgainst', 0)),
+                    'fenwick_pct': float(row.get('fenwickForPercentage', 50)),
+                    'shots_for': float(row.get('shotsOnGoalFor', 0)),
+                    'shots_against': float(row.get('shotsOnGoalAgainst', 0)),
+                    'shooting_pct': float(row.get('shootingPct', 0)),
+                    'save_pct': float(row.get('savePct', 0.900)),
+                    'pdo': float(row.get('PDO', 100)),
                 }
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, KeyError):
                 continue
         
         if teams_data:
@@ -223,7 +231,7 @@ def fetch_special_teams_stats():
         return {}
 
 
-def get_team_advanced_stats(team_abbrev: str, season: str = "2025"):
+def get_team_advanced_stats(team_abbrev: str, season: str = "20252026"):
     """
     Get comprehensive advanced stats for a team.
     
