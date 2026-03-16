@@ -756,8 +756,10 @@ def main():
                         help="Run without live odds (no API key needed)")
     parser.add_argument("--similar", type=int, default=50,
                         help="Number of similar games to use (default: 50)")
-    parser.add_argument("--conservative", action="store_true",
+    parser.add_argument("--conservative", action="store_true", default=True,
                         help="Conservative mode: totals + ML only, higher min edge, cap unrealistic edges")
+    parser.add_argument("--with-spreads", action="store_true",
+                        help="Include spread bets (disabled by default, spread model unreliable)")
     args = parser.parse_args()
 
     run_analysis(
@@ -766,7 +768,7 @@ def main():
         min_edge=args.min_edge,
         use_odds=not args.no_odds,
         n_similar=args.similar,
-        conservative=args.conservative,
+        conservative=not args.with_spreads,
     )
 
 

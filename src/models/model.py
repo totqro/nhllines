@@ -261,14 +261,21 @@ def estimate_probabilities(
     exact_matchups = sum(1 for g, _ in similar_games
                          if g["home_team"] == home_team and g["away_team"] == away_team)
 
-    # Base confidence from quality of matches (0-0.5)
-    quality_conf = min(0.5, top5_avg * 0.55)
-    # Bonus from volume of good matches (0-0.3)
-    volume_conf = min(0.3, high_sim_count / 25)
-    # Bonus from exact matchup history (0-0.2)
-    exact_conf = min(0.2, exact_matchups / 5)
+    # Base confidence from quality of matches (0-0.30)
+    quality_conf = min(0.30, top5_avg * 0.35)
+    # Bonus from volume of good matches (0-0.20)
+    volume_conf = min(0.20, high_sim_count / 40)
+    # Bonus from exact matchup history (0-0.15)
+    exact_conf = min(0.15, exact_matchups / 5)
+    # Bonus from prediction decisiveness — how far from 50/50 (0-0.15)
+    decisiveness = abs(home_win_prob - 0.5) * 2  # 0-1 scale
+    decisive_conf = min(0.15, decisiveness * 0.15)
+    # Bonus from agreement among similar games (0-0.15)
+    # If similar games strongly agree (e.g., 80% home wins), higher confidence
+    agreement = abs(home_win_prob - 0.5) / 0.5  # How lopsided the results are
+    agree_conf = min(0.15, agreement * 0.15)
 
-    confidence = min(0.95, quality_conf + volume_conf + exact_conf)
+    confidence = min(0.95, quality_conf + volume_conf + exact_conf + decisive_conf + agree_conf)
 
     # Apply regression to the mean based on confidence
     # Low confidence -> pull toward 50/50, high confidence -> trust the model
@@ -277,6 +284,14 @@ def estimate_probabilities(
     # Spreads are harder to predict — extra regression (use confidence * 0.6)
     spread_conf = confidence * 0.6
     regressed_cover_prob = home_cover_prob * spread_conf + 0.5 * (1 - spread_conf)
+
+    # Constraint: cover prob can never exceed win prob (can't cover -1.5 more than you win)
+    regressed_cover_prob = min(regressed_cover_prob, regressed_home_prob)
+    # Same for away: away cover can't exceed away win prob
+    away_cover = 1 - regressed_cover_prob
+    away_win = 1 - regressed_home_prob
+    if away_cover > away_win:
+        regressed_cover_prob = 1 - away_win  # Cap away cover at away win prob
 
     return {
         "home_win_prob": regressed_home_prob,
@@ -352,6 +367,12 @@ def blend_model_and_market(
         (1 - spread_weight) * market_probs.get("spread_home_cover_prob", 0.5)
     )
     blended["away_cover_prob"] = 1 - blended["home_cover_prob"]
+
+    # Constraint: cover prob can never exceed win prob
+    blended["home_cover_prob"] = min(blended["home_cover_prob"], blended["home_win_prob"])
+    blended["away_cover_prob"] = min(blended["away_cover_prob"], blended["away_win_prob"])
+    # Recalculate complements
+    blended["home_cover_prob"] = 1 - blended["away_cover_prob"]
 
     blended["model_confidence"] = confidence
     blended["effective_model_weight"] = effective_weight

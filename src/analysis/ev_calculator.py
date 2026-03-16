@@ -129,11 +129,13 @@ def evaluate_all_bets(
 
     # --- SPREAD BETS ---
     # Skip spreads entirely in conservative mode (model isn't reliable enough)
+    # Spreads use reduced confidence (harder to predict margin than winner)
+    spread_confidence = confidence * 0.6
     if not conservative:
         # Evaluate both but only keep the one with higher edge (if any)
         home_spread_bet = None
         away_spread_bet = None
-        
+
         if best_odds["spread"]["home"]:
             point = best_odds["spread"]["home"]["point"]
             ev_data = calculate_ev(
@@ -149,7 +151,7 @@ def evaluate_all_bets(
                     "book": best_odds["spread"]["home"]["book"],
                     "odds": best_odds["spread"]["home"]["price"],
                     **ev_data,
-                    "confidence": confidence,
+                    "confidence": spread_confidence,
                 }
 
         if best_odds["spread"]["away"]:
@@ -167,7 +169,7 @@ def evaluate_all_bets(
                     "book": best_odds["spread"]["away"]["book"],
                     "odds": best_odds["spread"]["away"]["price"],
                     **ev_data,
-                    "confidence": confidence,
+                    "confidence": spread_confidence,
                 }
         
         # Only add the spread bet with higher edge (don't recommend both sides)
@@ -183,13 +185,21 @@ def evaluate_all_bets(
 
     # --- TOTAL BETS ---
     # Evaluate both but only keep the one with higher edge (if any)
+    # odds_fetcher now prefers .5 lines; whole number lines are only used as fallback
+    # For whole number lines, adjust true_prob downward to account for push probability
+    # (push prob is approximated as ~8% for NHL, i.e. P(exactly N goals))
     over_bet = None
     under_bet = None
-    
+
     if best_odds["total"]["over"]:
         point = best_odds["total"]["over"]["point"]
+        over_prob = blended_probs["over_prob"]
+        # If whole number line, reduce effective win prob by ~half the push probability
+        if point % 1 == 0.0:
+            push_prob = 0.08  # ~8% chance of exactly N goals in NHL
+            over_prob = over_prob * (1 - push_prob)
         ev_data = calculate_ev(
-            true_prob=blended_probs["over_prob"],
+            true_prob=over_prob,
             american_odds=best_odds["total"]["over"]["price"],
             stake=stake,
         )
@@ -206,8 +216,13 @@ def evaluate_all_bets(
 
     if best_odds["total"]["under"]:
         point = best_odds["total"]["under"]["point"]
+        under_prob = blended_probs["under_prob"]
+        # If whole number line, reduce effective win prob by ~half the push probability
+        if point % 1 == 0.0:
+            push_prob = 0.08
+            under_prob = under_prob * (1 - push_prob)
         ev_data = calculate_ev(
-            true_prob=blended_probs["under_prob"],
+            true_prob=under_prob,
             american_odds=best_odds["total"]["under"]["price"],
             stake=stake,
         )

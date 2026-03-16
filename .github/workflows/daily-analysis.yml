@@ -49,6 +49,9 @@ jobs:
           path: ml_models/
         continue-on-error: true
 
+      - name: Create required directories
+        run: mkdir -p data ml_models cache build/nhllines
+
       - name: Run NHL analysis
         run: python main.py --stake 0.50
 
