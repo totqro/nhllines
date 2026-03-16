@@ -14,6 +14,7 @@ cache/
 ml_models/
 *.json
 !config.json.example
+!firebase.json
 
 # IDE
 .vscode/
