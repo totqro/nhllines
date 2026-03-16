@@ -5,6 +5,20 @@ Outputs ranked recommendations.
 """
 
 from src.data.odds_fetcher import american_to_decimal, american_to_implied_prob
+from src.models.model import _poisson_over_prob
+
+# Books where the model has historically had edge (soft/recreational books)
+# Based on performance analysis: BetMGM 75%, ESPN 58%, Bovada/Bally 60%
+# Sharp books where model loses: FanDuel 33%, BetParx 17%, Fliff 20%, LowVig 29%
+SOFT_BOOKS = {
+    "espnbet", "betmgm", "bovada", "ballybet", "draftkings",
+    "betrivers", "pointsbet", "thescore", "betway", "bet365",
+    "williamhill_us", "unibet_us", "superbook", "twinspires",
+    "wynnbet", "hardrockbet",
+}
+SHARP_BOOKS = {
+    "fanduel", "betparx", "lowvig", "fliff", "pinnacle", "betcris",
+}
 
 
 def calculate_ev(
@@ -58,6 +72,7 @@ def evaluate_all_bets(
     min_confidence: float = 0.3,
     conservative: bool = False,
     max_edge: float = 1.0,  # No practical cap - show all edges
+    book_filter: str = "soft",  # "soft" = exclude sharp books, "all" = no filter
 ) -> list:
     """
     Evaluate all possible bets for a single game.
@@ -77,12 +92,18 @@ def evaluate_all_bets(
         min_edge = max(min_edge, 0.03)  # At least 3% edge
         min_confidence = max(min_confidence, 0.5)
 
+    # Book filter helper — skip bets on sharp books where model has no edge
+    def _book_allowed(book_key: str) -> bool:
+        if book_filter == "all":
+            return True
+        return book_key.lower() not in SHARP_BOOKS
+
     # --- MONEYLINE BETS ---
     # Evaluate both but only keep the one with higher edge (if any)
     home_ml_bet = None
     away_ml_bet = None
     
-    if best_odds["moneyline"]["home"]:
+    if best_odds["moneyline"]["home"] and _book_allowed(best_odds["moneyline"]["home"]["book"]):
         ev_data = calculate_ev(
             true_prob=blended_probs["home_win_prob"],
             american_odds=best_odds["moneyline"]["home"]["price"],
@@ -99,7 +120,7 @@ def evaluate_all_bets(
                 "confidence": confidence,
             }
 
-    if best_odds["moneyline"]["away"]:
+    if best_odds["moneyline"]["away"] and _book_allowed(best_odds["moneyline"]["away"]["book"]):
         ev_data = calculate_ev(
             true_prob=blended_probs["away_win_prob"],
             american_odds=best_odds["moneyline"]["away"]["price"],
@@ -184,75 +205,81 @@ def evaluate_all_bets(
             bets.append(away_spread_bet)
 
     # --- TOTAL BETS ---
-    # Evaluate both but only keep the one with higher edge (if any)
-    # odds_fetcher now prefers .5 lines; whole number lines are only used as fallback
-    # For whole number lines, adjust true_prob downward to account for push probability
-    # (push prob is approximated as ~8% for NHL, i.e. P(exactly N goals))
-    over_bet = None
-    under_bet = None
+    # Use Poisson distribution to evaluate alternate total lines across books.
+    # This finds +EV on lines like 5.5 even when the consensus line is 6.5.
+    expected_total = blended_probs.get("expected_total",
+                                       best_odds["total"]["over"]["point"] if best_odds["total"]["over"] else 6.0)
 
+    best_total_bet = None
+
+    # Collect all unique total lines across all books
+    all_total_lines = set()
+    all_books = best_odds.get("all_books", {})
+    for bk, bk_odds in all_books.items():
+        if "total_over" in bk_odds:
+            all_total_lines.add((bk, "over", bk_odds["total_over"]["point"], bk_odds["total_over"]["price"]))
+        if "total_under" in bk_odds:
+            all_total_lines.add((bk, "under", bk_odds["total_under"]["point"], bk_odds["total_under"]["price"]))
+
+    # Also include the best odds entries
     if best_odds["total"]["over"]:
-        point = best_odds["total"]["over"]["point"]
-        over_prob = blended_probs["over_prob"]
-        # If whole number line, reduce effective win prob by ~half the push probability
-        if point % 1 == 0.0:
-            push_prob = 0.08  # ~8% chance of exactly N goals in NHL
-            over_prob = over_prob * (1 - push_prob)
-        ev_data = calculate_ev(
-            true_prob=over_prob,
-            american_odds=best_odds["total"]["over"]["price"],
-            stake=stake,
-        )
-        if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-            over_bet = {
-                "game": game_label,
-                "bet_type": "Total",
-                "pick": f"Over {point}",
-                "book": best_odds["total"]["over"]["book"],
-                "odds": best_odds["total"]["over"]["price"],
-                **ev_data,
-                "confidence": confidence,
-            }
-
+        all_total_lines.add((best_odds["total"]["over"]["book"], "over",
+                             best_odds["total"]["over"]["point"], best_odds["total"]["over"]["price"]))
     if best_odds["total"]["under"]:
-        point = best_odds["total"]["under"]["point"]
-        under_prob = blended_probs["under_prob"]
-        # If whole number line, reduce effective win prob by ~half the push probability
-        if point % 1 == 0.0:
-            push_prob = 0.08
-            under_prob = under_prob * (1 - push_prob)
-        ev_data = calculate_ev(
-            true_prob=under_prob,
-            american_odds=best_odds["total"]["under"]["price"],
-            stake=stake,
-        )
-        if ev_data["edge"] >= min_edge and ev_data["edge"] <= max_edge:
-            under_bet = {
+        all_total_lines.add((best_odds["total"]["under"]["book"], "under",
+                             best_odds["total"]["under"]["point"], best_odds["total"]["under"]["price"]))
+
+    for book, side, point, price in all_total_lines:
+        if not _book_allowed(book):
+            continue
+        # Calculate Poisson-based probability for this specific line
+        poisson_over = _poisson_over_prob(expected_total, point)
+
+        # Blend with the model's over_prob if the line matches the primary line
+        primary_line = best_odds["total"]["over"]["point"] if best_odds["total"]["over"] else None
+        if primary_line and abs(point - primary_line) < 0.1:
+            # Same line as primary — use the blended prob (already Poisson-weighted)
+            true_prob = blended_probs["over_prob"] if side == "over" else blended_probs["under_prob"]
+        else:
+            # Alternate line — use pure Poisson
+            true_prob = poisson_over if side == "over" else (1.0 - poisson_over)
+
+        ev_data = calculate_ev(true_prob=true_prob, american_odds=price, stake=stake)
+
+        # Under bets require higher edge — model has strong Under bias (39% win rate)
+        effective_min_edge = min_edge * 1.67 if side == "under" else min_edge  # ~5% for conservative mode
+
+        if ev_data["edge"] >= effective_min_edge and ev_data["edge"] <= max_edge:
+            candidate = {
                 "game": game_label,
                 "bet_type": "Total",
-                "pick": f"Under {point}",
-                "book": best_odds["total"]["under"]["book"],
-                "odds": best_odds["total"]["under"]["price"],
+                "pick": f"{'Over' if side == 'over' else 'Under'} {point}",
+                "book": book,
+                "odds": price,
                 **ev_data,
                 "confidence": confidence,
             }
-    
-    # Only add the total bet with higher edge (don't recommend both over and under)
-    if over_bet and under_bet:
-        if over_bet["edge"] > under_bet["edge"]:
-            bets.append(over_bet)
-        else:
-            bets.append(under_bet)
-    elif over_bet:
-        bets.append(over_bet)
-    elif under_bet:
-        bets.append(under_bet)
+            if best_total_bet is None or candidate["ev"] > best_total_bet["ev"]:
+                best_total_bet = candidate
+
+    if best_total_bet:
+        bets.append(best_total_bet)
 
     # Also evaluate theScore specifically if available
     bets.extend(_evaluate_thescore_odds(
         game_label, home_team, away_team,
         blended_probs, best_odds, stake, min_edge
     ))
+
+    # Add Kelly stake sizing to each bet
+    for bet in bets:
+        kelly_frac = kelly_criterion(
+            bet["true_prob"],
+            bet["decimal_odds"],
+            fraction=0.25,  # Quarter Kelly for safety
+        )
+        bet["kelly_fraction"] = kelly_frac
+        bet["kelly_stake"] = round(kelly_frac * 100, 2)  # As % of bankroll
 
     # Sort by EV descending
     bets.sort(key=lambda b: b["ev"], reverse=True)
@@ -347,7 +374,8 @@ def format_recommendations(all_bets: list, top_n: int = 15, quota_info: dict = N
         lines.append(f"     Odds: {bet['odds']:+d} (decimal: {bet['decimal_odds']:.3f})")
         lines.append(f"     Model prob: {bet['true_prob']:.1%} vs Implied: {bet['implied_prob']:.1%}")
         lines.append(f"     Edge: {bet['edge']:.1%} | EV per $1: ${bet['ev']:.4f} | ROI: {bet['roi']:.2%}")
-        lines.append(f"     Confidence: {bet['confidence']:.0%}")
+        kelly_pct = bet.get('kelly_stake', 0)
+        lines.append(f"     Confidence: {bet['confidence']:.0%} | Kelly: {kelly_pct:.1f}% of bankroll")
         lines.append("")
 
     # Summary stats

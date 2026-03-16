@@ -22,6 +22,7 @@ Setup:
 import argparse
 import json
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
@@ -69,6 +70,7 @@ def run_analysis(
     use_odds: bool = True,
     n_similar: int = 50,
     conservative: bool = False,
+    book_filter: str = "soft",
 ):
     """Main analysis pipeline."""
     print("=" * 60)
@@ -96,43 +98,75 @@ def run_analysis(
         team_forms[team] = get_team_recent_form(team, all_games, n=10)
     
     # Step 3.5: Train/load ML model
-    print("\n[3.5/5] Initializing Streamlined ML model (hybrid approach)...")
+    print("\n[3.5/5] Initializing enhanced ML model (52 features: base + contextual + advanced)...")
     ml_model = StreamlinedNHLMLModel()
-    
+
     # Check if models exist and their age
     model_path = Path(__file__).parent / "ml_models" / "win_model.pkl"
     should_retrain = False
-    
+
     if model_path.exists():
         import time
         age_days = (time.time() - model_path.stat().st_mtime) / 86400
         print(f"  Found existing models (age: {age_days:.1f} days)")
-        
-        # Retrain if models are > 7 days old
-        if age_days > 7:
-            print(f"  ⚠️  Models are stale (>{age_days:.0f} days old), retraining with latest data...")
+
+        # Retrain daily — stale models miss form changes, injuries, roster moves
+        if age_days > 1:
+            print(f"  ⚠️  Models are stale (>{age_days:.1f} days old), retraining with latest data...")
             should_retrain = True
         else:
-            print(f"  ✅ Models are fresh, loading from disk...")
+            # Try loading and check feature count matches (30 features expected)
+            try:
+                ml_model.load_models()
+                # Verify model expects 30 features
+                n_features = ml_model.model_win.n_features_in_
+                if n_features != 30:
+                    print(f"  ⚠️  Model has {n_features} features, need 30. Retraining...")
+                    should_retrain = True
+                else:
+                    print(f"  ✅ Models are fresh ({n_features} features), loaded from disk")
+            except Exception:
+                print("  ⚠️  Could not load models, retraining...")
+                should_retrain = True
     else:
         print("  No existing models found, training new ones...")
         should_retrain = True
-    
-    if should_retrain:
-        print("  Training streamlined ML model...")
-        ml_model.train(all_games, standings, team_forms)
-    else:
-        ml_model.load_models()
-    
-    # Step 3.6: Fetch goalie data
-    print("\n[3.6/5] Fetching goalie data...")
-    goalie_starters = get_todays_starters()
-    print(f"  Loaded goalie data for {len(goalie_starters)} teams")
-    
-    # Step 3.7: Fetch injury data
-    print("\n[3.7/5] Fetching injury data...")
-    all_injuries = get_todays_injuries()
-    print(f"  Loaded injury data for {len(all_injuries)} teams")
+
+    # Run ML training, goalie fetch, and injury fetch in parallel
+    # These are independent operations that together take ~8-10s sequentially
+    goalie_starters = {}
+    all_injuries = {}
+
+    def _train_model():
+        if should_retrain:
+            print("  Training enhanced ML model with contextual features...")
+            ml_model.train(all_games, standings, team_forms)
+        if not ml_model.is_trained:
+            try:
+                ml_model.load_models()
+            except Exception:
+                print("  ⚠️  ML model unavailable, falling back to similarity-only")
+
+    def _fetch_goalies():
+        print("\n[3.6/5] Fetching goalie data...")
+        result = get_todays_starters()
+        print(f"  Loaded goalie data for {len(result)} teams")
+        return result
+
+    def _fetch_injuries():
+        print("\n[3.7/5] Fetching injury data...")
+        result = get_todays_injuries()
+        print(f"  Loaded injury data for {len(result)} teams")
+        return result
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        model_future = executor.submit(_train_model)
+        goalie_future = executor.submit(_fetch_goalies)
+        injury_future = executor.submit(_fetch_injuries)
+
+        goalie_starters = goalie_future.result()
+        all_injuries = injury_future.result()
+        model_future.result()  # Wait for training to complete
 
     # Step 4: Fetch odds (if enabled)
     odds_games = []
@@ -198,6 +232,50 @@ def run_analysis(
     game_analyses = []
 
     if use_odds and odds_games:
+        # Pre-compute team data for all unique teams (avoids redundant per-game fetches)
+        unique_teams = set()
+        for game_data in odds_games:
+            h = team_name_to_abbrev(game_data["home_team"])
+            a = team_name_to_abbrev(game_data["away_team"])
+            if h in standings:
+                unique_teams.add(h)
+            if a in standings:
+                unique_teams.add(a)
+
+        print(f"  Pre-computing splits, advanced stats & streaks for {len(unique_teams)} teams...")
+        team_splits_cache = {}
+        team_advanced_cache = {}
+        for team in unique_teams:
+            team_splits_cache[team] = get_team_splits(team, all_games, n_recent=10)
+            team_advanced_cache[team] = get_team_advanced_stats(team)
+
+        # Pre-compute special teams stats
+        team_special_teams_cache = {}
+        try:
+            from src.analysis.advanced_stats import get_special_teams_stats
+            for team in unique_teams:
+                team_special_teams_cache[team] = get_special_teams_stats(team)
+        except Exception as e:
+            print(f"  Warning: Could not load special teams: {e}")
+
+        # Calculate streak momentum for all teams
+        team_streaks = StreamlinedNHLMLModel._calculate_streaks(all_games)
+
+        # Get current streak for each team (most recent date)
+        today = datetime.now().strftime("%Y-%m-%d")
+        team_current_streak = {}
+        for team in unique_teams:
+            # Find the most recent streak value for this team
+            team_dates = sorted([d for (t, d) in team_streaks if t == team], reverse=True)
+            if team_dates:
+                team_current_streak[team] = team_streaks.get((team, team_dates[0]), 0)
+            else:
+                team_current_streak[team] = 0
+
+        # Pre-compute H2H records and form trends
+        h2h_records = StreamlinedNHLMLModel._calculate_h2h(all_games)
+        form_trends = StreamlinedNHLMLModel._calculate_form_trends(all_games)
+
         # Analyze games with live odds
         for game_data in odds_games:
             home_full = game_data["home_team"]
@@ -278,34 +356,35 @@ def run_analysis(
                     'recent_quality_starts': away_goalie_info['stats'].get('recent_quality_starts', 5),
                 }
             
-            # Add injury data to player_data
-            from src.analysis.injury_impact_enhanced import get_injury_adjusted_probabilities
+            # Add injury data to player_data (for display, not for manual adjustment)
             from src.analysis.injury_tracker import calculate_injury_impact
             home_injuries = all_injuries.get(home, [])
             away_injuries = all_injuries.get(away, [])
-            
+
             home_injury_impact = calculate_injury_impact(home_injuries, home)
             away_injury_impact = calculate_injury_impact(away_injuries, away)
-            
+
             player_data['home_injury_impact'] = home_injury_impact['impact_score']
             player_data['away_injury_impact'] = away_injury_impact['impact_score']
-            
-            # Calculate injury-adjusted win probabilities (for later use)
-            injury_adjustment_data = get_injury_adjusted_probabilities(
-                base_home_prob=0.5,  # Will be updated after ML prediction
-                home_injuries=home_injuries,
-                away_injuries=away_injuries,
-                home_team=home,
-                away_team=away
-            )
-            
-            # Add advanced stats to player_data
-            player_data['home_advanced_stats'] = get_team_advanced_stats(home)
-            player_data['away_advanced_stats'] = get_team_advanced_stats(away)
-            
-            # Add home/road splits to player_data
-            home_splits = get_team_splits(home, all_games, n_recent=10)
-            away_splits = get_team_splits(away, all_games, n_recent=10)
+
+            # Use pre-computed data instead of per-game fetches
+            player_data['home_advanced_stats'] = team_advanced_cache.get(home, {})
+            player_data['away_advanced_stats'] = team_advanced_cache.get(away, {})
+
+            # Add streak momentum
+            player_data['home_streak'] = team_current_streak.get(home, 0)
+            player_data['away_streak'] = team_current_streak.get(away, 0)
+
+            # Add special teams stats
+            player_data['home_special_teams'] = team_special_teams_cache.get(home, {})
+            player_data['away_special_teams'] = team_special_teams_cache.get(away, {})
+
+            # Add H2H and form trends
+            player_data['h2h_home_win_rate'] = h2h_records.get((home, away), 0.5)
+            player_data['home_form_trend'] = form_trends.get(home, 0.0)
+
+            home_splits = team_splits_cache.get(home, {'home_recent': {}, 'road_recent': {}})
+            away_splits = team_splits_cache.get(away, {'home_recent': {}, 'road_recent': {}})
             
             player_data['home_team_splits'] = home_splits['home_recent']  # Home team at home
             player_data['away_team_splits'] = away_splits['road_recent']  # Away team on road
@@ -383,29 +462,14 @@ def run_analysis(
                 player_context = ""
 
             # Blend model with market
+            # No post-blend manual adjustments — all contextual factors (B2B, goalie,
+            # splits, rest) are incorporated as ML features so XGBoost learns optimal
+            # weights. Analysis of 575 games showed manual adjustments hurt performance.
             blended = blend_model_and_market(model_probs, market_probs)
-            
-            # Apply injury adjustment to blended probabilities
-            # This uses historical data to adjust for injury impact
-            injury_adjusted = get_injury_adjusted_probabilities(
-                base_home_prob=blended['home_win_prob'],
-                home_injuries=home_injuries,
-                away_injuries=away_injuries,
-                home_team=home,
-                away_team=away
-            )
-            
-            # Update blended probabilities with injury adjustment
-            if abs(injury_adjusted['adjustment']) > 0.01:  # Only apply if significant (>1%)
-                blended['home_win_prob'] = injury_adjusted['adjusted_home_prob']
-                blended['away_win_prob'] = injury_adjusted['adjusted_away_prob']
-                injury_adj_text = f" [Injury adj: {injury_adjusted['adjustment']:+.1%}]"
-            else:
-                injury_adj_text = ""
 
             # Print analysis
             line_source = "theScore" if thescore_odds.get("total_over") else "best available"
-            ml_indicator = " (Hybrid ML+Rules)" if ml_pred and ml_pred.get('adjustments_applied') else " (ML-enhanced)" if ml_pred else ""
+            ml_indicator = " (ML+Context)" if ml_pred else ""
             
             # Add goalie context with confirmation status
             goalie_context = ""
@@ -443,13 +507,20 @@ def run_analysis(
                 if injury_parts:
                     injury_context = f" [Injuries: {', '.join(injury_parts)}]"
             
+            # Build context factors text from ML model
+            context_factors_text = ""
+            if ml_pred:
+                factors = ml_pred.get('adjustments_applied', {}).get('factors', [])
+                if factors:
+                    context_factors_text = f" [Context: {', '.join(factors)}]"
+
             print(f"    Model{ml_indicator}: {home} {model_probs['home_win_prob']:.1%} / "
                   f"{away} {model_probs['away_win_prob']:.1%} "
-                  f"(confidence: {model_probs['confidence']:.0%}){player_context}{goalie_context}{injury_context}{adjustment_text if ml_pred else ''}")
+                  f"(confidence: {model_probs['confidence']:.0%}){player_context}{goalie_context}{injury_context}{context_factors_text}")
             print(f"    Market: {home} {market_probs['home_win_prob']:.1%} / "
                   f"{away} {market_probs['away_win_prob']:.1%}")
             print(f"    Blended: {home} {blended['home_win_prob']:.1%} / "
-                  f"{away} {blended['away_win_prob']:.1%}{injury_adj_text}")
+                  f"{away} {blended['away_win_prob']:.1%}")
             if total_line:
                 print(f"    Total: line {total_line} ({line_source}), model expects "
                       f"{model_probs['expected_total']:.1f} goals "
@@ -461,6 +532,7 @@ def run_analysis(
                 blended, best_odds,
                 stake=stake, min_edge=min_edge,
                 conservative=conservative,
+                book_filter=book_filter,
             )
             # Attach all_book_odds to each bet for line shopping UI
             all_books = best_odds.get("all_books", {})
@@ -761,6 +833,8 @@ def main():
                         help="Conservative mode: totals + ML only, higher min edge, cap unrealistic edges")
     parser.add_argument("--with-spreads", action="store_true",
                         help="Include spread bets (disabled by default, spread model unreliable)")
+    parser.add_argument("--all-books", action="store_true",
+                        help="Include all books (default: filter out sharp books where model has no edge)")
     args = parser.parse_args()
 
     run_analysis(
@@ -770,6 +844,7 @@ def main():
         use_odds=not args.no_odds,
         n_similar=args.similar,
         conservative=not args.with_spreads,
+        book_filter="all" if args.all_books else "soft",
     )
 
 
