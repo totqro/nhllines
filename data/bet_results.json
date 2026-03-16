@@ -3257,6 +3257,836 @@
         "away_won": true
       },
       "checked_at": "2026-03-15T13:02:52.491934"
+    },
+    "FLA @ SEA_Under 5.5": {
+      "bet": {
+        "game": "FLA @ SEA",
+        "bet_type": "Total",
+        "pick": "Under 5.5",
+        "book": "espnbet",
+        "odds": 115,
+        "ev": 0.10107897746546624,
+        "roi": 0.10107897746546624,
+        "edge": 0.047013477890914535,
+        "true_prob": 0.512129756960682,
+        "implied_prob": 0.46511627906976744,
+        "american_odds": 115,
+        "decimal_odds": 2.15,
+        "stake": 1.0,
+        "profit_if_win": 1.15,
+        "loss_if_lose": 1.0,
+        "is_positive_ev": true,
+        "confidence": 0.5046745482485158,
+        "all_book_odds": [
+          {
+            "book": "espnbet",
+            "odds": 115,
+            "point": 5.5
+          },
+          {
+            "book": "draftkings",
+            "odds": 114,
+            "point": 5.5
+          },
+          {
+            "book": "fliff",
+            "odds": 105,
+            "point": 5.5
+          },
+          {
+            "book": "hardrockbet",
+            "odds": 105,
+            "point": 5.5
+          },
+          {
+            "book": "betmgm",
+            "odds": -110,
+            "point": 6.0
+          },
+          {
+            "book": "betanysports",
+            "odds": -110,
+            "point": 6.0
+          },
+          {
+            "book": "betparx",
+            "odds": -115,
+            "point": 6.0
+          },
+          {
+            "book": "ballybet",
+            "odds": -115,
+            "point": 6.0
+          },
+          {
+            "book": "lowvig",
+            "odds": -115,
+            "point": 6.0
+          },
+          {
+            "book": "betonlineag",
+            "odds": -115,
+            "point": 6.0
+          },
+          {
+            "book": "betus",
+            "odds": -115,
+            "point": 6.0
+          },
+          {
+            "book": "mybookieag",
+            "odds": -116,
+            "point": 6.0
+          },
+          {
+            "book": "betrivers",
+            "odds": -117,
+            "point": 6.0
+          },
+          {
+            "book": "bovada",
+            "odds": -117,
+            "point": 6.0
+          },
+          {
+            "book": "fanduel",
+            "odds": -132,
+            "point": 6.5
+          }
+        ],
+        "analysis_timestamp": "2026-03-15T18:47:27.315395"
+      },
+      "result": "lost",
+      "profit": -1.0,
+      "game_result": {
+        "date": "2026-03-15",
+        "home_score": 6,
+        "away_score": 2,
+        "total": 8,
+        "home_won": true,
+        "away_won": false
+      },
+      "checked_at": "2026-03-16T21:16:10.422038"
+    },
+    "ANA @ MTL_MTL ML": {
+      "bet": {
+        "game": "ANA @ MTL",
+        "bet_type": "Moneyline",
+        "pick": "MTL ML",
+        "book": "betonlineag",
+        "odds": -142,
+        "ev": 0.1800523340850192,
+        "roi": 0.1800523340850192,
+        "edge": 0.10565054314079636,
+        "true_prob": 0.6924274026449286,
+        "implied_prob": 0.5867768595041323,
+        "american_odds": -142,
+        "decimal_odds": 1.704225352112676,
+        "stake": 1.0,
+        "profit_if_win": 0.704225352112676,
+        "loss_if_lose": 1.0,
+        "is_positive_ev": true,
+        "confidence": 0.5412074868247133,
+        "all_book_odds": [
+          {
+            "book": "betonlineag",
+            "odds": -142
+          },
+          {
+            "book": "betmgm",
+            "odds": -145
+          },
+          {
+            "book": "bovada",
+            "odds": -145
+          },
+          {
+            "book": "hardrockbet",
+            "odds": -145
+          },
+          {
+            "book": "lowvig",
+            "odds": -145
+          },
+          {
+            "book": "betanysports",
+            "odds": -145
+          },
+          {
+            "book": "espnbet",
+            "odds": -145
+          },
+          {
+            "book": "fanduel",
+            "odds": -146
+          },
+          {
+            "book": "mybookieag",
+            "odds": -146
+          },
+          {
+            "book": "draftkings",
+            "odds": -148
+          },
+          {
+            "book": "betus",
+            "odds": -150
+          },
+          {
+            "book": "fliff",
+            "odds": -155
+          },
+          {
+            "book": "betparx",
+            "odds": -155
+          },
+          {
+            "book": "ballybet",
+            "odds": -155
+          },
+          {
+            "book": "betrivers",
+            "odds": -157
+          }
+        ],
+        "analysis_timestamp": "2026-03-15T14:24:03.861871"
+      },
+      "result": "lost",
+      "profit": -1.0,
+      "game_result": {
+        "date": "2026-03-15",
+        "home_score": 3,
+        "away_score": 4,
+        "total": 7,
+        "home_won": false,
+        "away_won": true
+      },
+      "checked_at": "2026-03-16T21:16:10.422053"
+    },
+    "STL @ WPG_STL ML": {
+      "bet": {
+        "game": "STL @ WPG",
+        "bet_type": "Moneyline",
+        "pick": "STL ML",
+        "book": "betparx",
+        "odds": -107,
+        "ev": 0.06755235865551779,
+        "roi": 0.06755235865551779,
+        "edge": 0.034918368966861846,
+        "true_prob": 0.5518265815272483,
+        "implied_prob": 0.5169082125603864,
+        "american_odds": -107,
+        "decimal_odds": 1.9345794392523366,
+        "stake": 1.0,
+        "profit_if_win": 0.9345794392523366,
+        "loss_if_lose": 1.0,
+        "is_positive_ev": true,
+        "confidence": 0.6816784797240384,
+        "all_book_odds": [
+          {
+            "book": "betparx",
+            "odds": -107
+          },
+          {
+            "book": "ballybet",
+            "odds": -107
+          },
+          {
+            "book": "betrivers",
+            "odds": -108
+          },
+          {
+            "book": "fliff",
+            "odds": -110
+          },
+          {
+            "book": "fanduel",
+            "odds": -113
+          },
+          {
+            "book": "betanysports",
+            "odds": -113
+          },
+          {
+            "book": "draftkings",
+            "odds": -115
+          },
+          {
+            "book": "betmgm",
+            "odds": -115
+          },
+          {
+            "book": "espnbet",
+            "odds": -115
+          },
+          {
+            "book": "hardrockbet",
+            "odds": -115
+          },
+          {
+            "book": "betonlineag",
+            "odds": -115
+          },
+          {
+            "book": "betus",
+            "odds": -115
+          },
+          {
+            "book": "lowvig",
+            "odds": -117
+          },
+          {
+            "book": "mybookieag",
+            "odds": -119
+          },
+          {
+            "book": "bovada",
+            "odds": -120
+          }
+        ],
+        "analysis_timestamp": "2026-03-15T14:24:03.861871"
+      },
+      "result": "lost",
+      "profit": -1.0,
+      "game_result": {
+        "date": "2026-03-15",
+        "home_score": 3,
+        "away_score": 2,
+        "total": 5,
+        "home_won": true,
+        "away_won": false
+      },
+      "checked_at": "2026-03-16T21:16:10.422057"
+    },
+    "NSH @ EDM_Over 7.0": {
+      "bet": {
+        "game": "NSH @ EDM",
+        "bet_type": "Total",
+        "pick": "Over 7.0",
+        "book": "ballybet",
+        "odds": 112,
+        "ev": 0.12316958783561982,
+        "roi": 0.12316958783561982,
+        "edge": 0.05809886218661309,
+        "true_prob": 0.5297969753941603,
+        "implied_prob": 0.4716981132075472,
+        "american_odds": 112,
+        "decimal_odds": 2.12,
+        "stake": 1.0,
+        "profit_if_win": 1.12,
+        "loss_if_lose": 1.0,
+        "is_positive_ev": true,
+        "confidence": 0.6895092077781585,
+        "all_book_odds": [
+          {
+            "book": "ballybet",
+            "odds": 112,
+            "point": 7.0
+          },
+          {
+            "book": "betparx",
+            "odds": 112,
+            "point": 7.0
+          },
+          {
+            "book": "betrivers",
+            "odds": 110,
+            "point": 7.0
+          },
+          {
+            "book": "draftkings",
+            "odds": -130,
+            "point": 6.5
+          },
+          {
+            "book": "betus",
+            "odds": -130,
+            "point": 6.5
+          },
+          {
+            "book": "betanysports",
+            "odds": -130,
+            "point": 6.5
+          },
+          {
+            "book": "lowvig",
+            "odds": -133,
+            "point": 6.5
+          },
+          {
+            "book": "betonlineag",
+            "odds": -133,
+            "point": 6.5
+          },
+          {
+            "book": "fanduel",
+            "odds": -134,
+            "point": 6.5
+          },
+          {
+            "book": "mybookieag",
+            "odds": -134,
+            "point": 6.5
+          },
+          {
+            "book": "betmgm",
+            "odds": -135,
+            "point": 6.5
+          },
+          {
+            "book": "espnbet",
+            "odds": -135,
+            "point": 6.5
+          },
+          {
+            "book": "fliff",
+            "odds": -140,
+            "point": 6.5
+          },
+          {
+            "book": "bovada",
+            "odds": -140,
+            "point": 6.5
+          },
+          {
+            "book": "hardrockbet",
+            "odds": -145,
+            "point": 6.5
+          }
+        ],
+        "analysis_timestamp": "2026-03-15T13:57:23.838293"
+      },
+      "result": "lost",
+      "profit": -1.0,
+      "game_result": {
+        "date": "2026-03-15",
+        "home_score": 3,
+        "away_score": 1,
+        "total": 4,
+        "home_won": true,
+        "away_won": false
+      },
+      "checked_at": "2026-03-16T21:16:10.422064"
+    },
+    "SJS @ OTT_SJS ML": {
+      "bet": {
+        "game": "SJS @ OTT",
+        "bet_type": "Moneyline",
+        "pick": "SJS ML",
+        "book": "betrivers",
+        "odds": 175,
+        "ev": 0.10458458666542036,
+        "roi": 0.10458458666542036,
+        "edge": 0.03803075878742557,
+        "true_prob": 0.4016671224237892,
+        "implied_prob": 0.36363636363636365,
+        "american_odds": 175,
+        "decimal_odds": 2.75,
+        "stake": 1.0,
+        "profit_if_win": 1.75,
+        "loss_if_lose": 1.0,
+        "is_positive_ev": true,
+        "confidence": 0.5625485085776883,
+        "all_book_odds": [
+          {
+            "book": "betrivers",
+            "odds": 175
+          },
+          {
+            "book": "ballybet",
+            "odds": 175
+          },
+          {
+            "book": "betparx",
+            "odds": 175
+          },
+          {
+            "book": "espnbet",
+            "odds": 175
+          },
+          {
+            "book": "bovada",
+            "odds": 173
+          },
+          {
+            "book": "lowvig",
+            "odds": 173
+          },
+          {
+            "book": "betonlineag",
+            "odds": 173
+          },
+          {
+            "book": "fanduel",
+            "odds": 172
+          },
+          {
+            "book": "draftkings",
+            "odds": 170
+          },
+          {
+            "book": "hardrockbet",
+            "odds": 170
+          },
+          {
+            "book": "betus",
+            "odds": 170
+          },
+          {
+            "book": "betanysports",
+            "odds": 170
+          },
+          {
+            "book": "fliff",
+            "odds": 165
+          },
+          {
+            "book": "betmgm",
+            "odds": 165
+          },
+          {
+            "book": "mybookieag",
+            "odds": 165
+          }
+        ],
+        "analysis_timestamp": "2026-03-15T13:57:23.838293"
+      },
+      "result": "lost",
+      "profit": -1.0,
+      "game_result": {
+        "date": "2026-03-15",
+        "home_score": 7,
+        "away_score": 4,
+        "total": 11,
+        "home_won": true,
+        "away_won": false
+      },
+      "checked_at": "2026-03-16T21:16:10.422068"
+    },
+    "TOR @ MIN_Under 6.0": {
+      "bet": {
+        "game": "TOR @ MIN",
+        "bet_type": "Total",
+        "pick": "Under 6.0",
+        "book": "lowvig",
+        "odds": 112,
+        "ev": 0.0744692162899595,
+        "roi": 0.0744692162899595,
+        "edge": 0.03512698881601861,
+        "true_prob": 0.5068251020235658,
+        "implied_prob": 0.4716981132075472,
+        "american_odds": 112,
+        "decimal_odds": 2.12,
+        "stake": 1.0,
+        "profit_if_win": 1.12,
+        "loss_if_lose": 1.0,
+        "is_positive_ev": true,
+        "confidence": 0.5987027346802613,
+        "all_book_odds": [
+          {
+            "book": "lowvig",
+            "odds": 112,
+            "point": 6.0
+          },
+          {
+            "book": "betonlineag",
+            "odds": 112,
+            "point": 6.0
+          },
+          {
+            "book": "betus",
+            "odds": 110,
+            "point": 6.0
+          },
+          {
+            "book": "mybookieag",
+            "odds": -101,
+            "point": 6.0
+          },
+          {
+            "book": "bovada",
+            "odds": -117,
+            "point": 6.5
+          },
+          {
+            "book": "betmgm",
+            "odds": -118,
+            "point": 6.5
+          },
+          {
+            "book": "fliff",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "ballybet",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "betparx",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "hardrockbet",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "betanysports",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "espnbet",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "betrivers",
+            "odds": -121,
+            "point": 6.5
+          },
+          {
+            "book": "fanduel",
+            "odds": -122,
+            "point": 6.5
+          },
+          {
+            "book": "draftkings",
+            "odds": -125,
+            "point": 6.5
+          }
+        ],
+        "analysis_timestamp": "2026-03-15T13:09:22.624075"
+      },
+      "result": "lost",
+      "profit": -1.0,
+      "game_result": {
+        "date": "2026-03-15",
+        "home_score": 2,
+        "away_score": 4,
+        "total": 6,
+        "home_won": false,
+        "away_won": true
+      },
+      "checked_at": "2026-03-16T21:16:10.422075"
+    },
+    "NSH @ EDM_Over 6.5": {
+      "bet": {
+        "game": "NSH @ EDM",
+        "bet_type": "Total",
+        "pick": "Over 6.5",
+        "book": "ballybet",
+        "odds": -117,
+        "ev": 0.09243278831411761,
+        "roi": 0.09243278831411761,
+        "edge": 0.04983703333065326,
+        "true_prob": 0.5890075402430957,
+        "implied_prob": 0.5391705069124424,
+        "american_odds": -117,
+        "decimal_odds": 1.8547008547008548,
+        "stake": 1.0,
+        "profit_if_win": 0.8547008547008548,
+        "loss_if_lose": 1.0,
+        "is_positive_ev": true,
+        "confidence": 0.95,
+        "all_book_odds": [
+          {
+            "book": "ballybet",
+            "odds": -117,
+            "point": 6.5
+          },
+          {
+            "book": "betparx",
+            "odds": -117,
+            "point": 6.5
+          },
+          {
+            "book": "fanduel",
+            "odds": -118,
+            "point": 6.5
+          },
+          {
+            "book": "betrivers",
+            "odds": -118,
+            "point": 6.5
+          },
+          {
+            "book": "draftkings",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "betmgm",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "espnbet",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "hardrockbet",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "betus",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "betanysports",
+            "odds": -120,
+            "point": 6.5
+          },
+          {
+            "book": "lowvig",
+            "odds": -121,
+            "point": 6.5
+          },
+          {
+            "book": "betonlineag",
+            "odds": -121,
+            "point": 6.5
+          },
+          {
+            "book": "mybookieag",
+            "odds": -123,
+            "point": 6.5
+          },
+          {
+            "book": "fliff",
+            "odds": -125,
+            "point": 6.5
+          },
+          {
+            "book": "bovada",
+            "odds": -130,
+            "point": 6.5
+          }
+        ],
+        "analysis_timestamp": "2026-03-15T01:35:09.390890"
+      },
+      "result": "lost",
+      "profit": -1.0,
+      "game_result": {
+        "date": "2026-03-15",
+        "home_score": 3,
+        "away_score": 1,
+        "total": 4,
+        "home_won": true,
+        "away_won": false
+      },
+      "checked_at": "2026-03-16T21:16:10.422086"
+    },
+    "FLA @ SEA_Under 6.0": {
+      "bet": {
+        "game": "FLA @ SEA",
+        "bet_type": "Total",
+        "pick": "Under 6.0",
+        "book": "mybookieag",
+        "odds": -101,
+        "ev": 0.07487498485011024,
+        "roi": 0.07487498485011024,
+        "edge": 0.037623748606274265,
+        "true_prob": 0.540111310795329,
+        "implied_prob": 0.5024875621890548,
+        "american_odds": -101,
+        "decimal_odds": 1.99009900990099,
+        "stake": 1.0,
+        "profit_if_win": 0.9900990099009901,
+        "loss_if_lose": 1.0,
+        "is_positive_ev": true,
+        "confidence": 0.7605342308151499,
+        "all_book_odds": [
+          {
+            "book": "mybookieag",
+            "odds": -101,
+            "point": 6.0
+          },
+          {
+            "book": "betmgm",
+            "odds": -102,
+            "point": 6.0
+          },
+          {
+            "book": "betparx",
+            "odds": -107,
+            "point": 6.0
+          },
+          {
+            "book": "ballybet",
+            "odds": -107,
+            "point": 6.0
+          },
+          {
+            "book": "betrivers",
+            "odds": -108,
+            "point": 6.0
+          },
+          {
+            "book": "lowvig",
+            "odds": -123,
+            "point": 6.5
+          },
+          {
+            "book": "betonlineag",
+            "odds": -123,
+            "point": 6.5
+          },
+          {
+            "book": "draftkings",
+            "odds": -125,
+            "point": 6.5
+          },
+          {
+            "book": "betanysports",
+            "odds": -125,
+            "point": 6.5
+          },
+          {
+            "book": "bovada",
+            "odds": -130,
+            "point": 6.5
+          },
+          {
+            "book": "hardrockbet",
+            "odds": -130,
+            "point": 6.5
+          },
+          {
+            "book": "espnbet",
+            "odds": -130,
+            "point": 6.5
+          },
+          {
+            "book": "fliff",
+            "odds": -140,
+            "point": 6.5
+          },
+          {
+            "book": "fanduel",
+            "odds": -140,
+            "point": 6.5
+          }
+        ],
+        "analysis_timestamp": "2026-03-15T01:35:09.390890"
+      },
+      "result": "lost",
+      "profit": -1.0,
+      "game_result": {
+        "date": "2026-03-15",
+        "home_score": 6,
+        "away_score": 2,
+        "total": 8,
+        "home_won": true,
+        "away_won": false
+      },
+      "checked_at": "2026-03-16T21:16:10.422089"
     }
   }
 }
