@@ -371,8 +371,9 @@ function displayNoPerformanceData() {
 function displayAnalysis(data) {
     const timestamp = new Date(data.timestamp);
     document.getElementById('timestamp').textContent = timestamp.toLocaleString('en-US', {
-        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-    });
+        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+        timeZone: 'America/New_York'
+    }) + ' EST';
     document.getElementById('games-analyzed').textContent = data.games_analyzed.length;
     document.getElementById('bets-found').textContent = data.recommendations.length;
 
