@@ -2,8 +2,8 @@ name: Daily NHL Analysis
 
 on:
   schedule:
-    # Run at 4:00 PM ET (21:00 UTC) every day during NHL season
-    - cron: '0 21 * * *'
+    # Run at 4:30 PM EDT (20:30 UTC) every day during NHL season
+    - cron: '30 20 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
