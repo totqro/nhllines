@@ -82,7 +82,7 @@ function displayPerformance(results, history) {
     document.getElementById('perf-roi').textContent = `${roi}%`;
     document.getElementById('perf-profit').textContent = `$${totalProfit.toFixed(2)}`;
 
-    const expectedGain = resolvedBets.reduce((sum, r) => sum + (r.bet.stake || 0.5) * r.bet.edge, 0);
+    const expectedGain = resolvedBets.reduce((sum, r) => sum + (r.bet.stake * r.bet.edge), 0);
     const difference = totalProfit - expectedGain;
 
     document.getElementById('expected-gain').textContent = `$${expectedGain.toFixed(2)}`;
@@ -170,17 +170,12 @@ function displayRecentResults(resolvedBets) {
 let profitChartInstance = null;
 let allSortedBets = []; // Store all bets for range filtering
 
-function getBetDate(r) {
-    // Use game_result.date first (actual game date), then analysis_timestamp, then checked_at
-    if (r.game_result && r.game_result.date) return new Date(r.game_result.date + 'T12:00:00');
-    if (r.bet.analysis_timestamp) return new Date(r.bet.analysis_timestamp);
-    return new Date(r.checked_at || 0);
-}
-
 function displayProfitChart(resolvedBets) {
-    // Sort all bets chronologically by game date
+    // Sort all bets chronologically and store globally
     allSortedBets = [...resolvedBets].sort((a, b) => {
-        return getBetDate(a) - getBetDate(b);
+        const dateA = new Date(a.checked_at || a.bet.analysis_timestamp || 0);
+        const dateB = new Date(b.checked_at || b.bet.analysis_timestamp || 0);
+        return dateA - dateB;
     });
 
     renderProfitChart(allSortedBets);
@@ -213,16 +208,14 @@ function setChartRange(range) {
     const filtered = [];
 
     allSortedBets.forEach(r => {
-        const betDate = getBetDate(r);
-        if (betDate < cutoff) {
-            priorProfit += r.profit;
-            priorExpected += r.bet.ev;
-        } else {
+        const betDate = new Date(r.checked_at || r.bet.analysis_timestamp || 0);
+        if (betDate >= cutoff) {
             filtered.push(r);
         }
     });
 
-    renderProfitChart(filtered, priorProfit, priorExpected);
+    // Start filtered views from 0 (not cumulative all-time)
+    renderProfitChart(filtered, 0, 0);
 }
 
 function renderProfitChart(bets, startingProfit = 0, startingExpected = 0) {
@@ -249,8 +242,8 @@ function renderProfitChart(bets, startingProfit = 0, startingExpected = 0) {
 
     bets.forEach((r, i) => {
         cumProfit += r.profit;
-        cumExpected += (r.bet.stake || 0.5) * r.bet.edge;
-        const date = getBetDate(r);
+        cumExpected += (r.bet.stake * r.bet.edge);
+        const date = new Date(r.bet.analysis_timestamp || r.checked_at);
         // Show date for context
         const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         labels.push(label);
