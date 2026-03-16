@@ -173,8 +173,8 @@ let allSortedBets = []; // Store all bets for range filtering
 function displayProfitChart(resolvedBets) {
     // Sort all bets chronologically and store globally
     allSortedBets = [...resolvedBets].sort((a, b) => {
-        const dateA = new Date(a.checked_at || a.bet.analysis_timestamp || 0);
-        const dateB = new Date(b.checked_at || b.bet.analysis_timestamp || 0);
+        const dateA = new Date(a.bet.analysis_timestamp || a.checked_at || 0);
+        const dateB = new Date(b.bet.analysis_timestamp || b.checked_at || 0);
         return dateA - dateB;
     });
 
@@ -208,7 +208,7 @@ function setChartRange(range) {
     const filtered = [];
 
     allSortedBets.forEach(r => {
-        const betDate = new Date(r.checked_at || r.bet.analysis_timestamp || 0);
+        const betDate = new Date(r.bet.analysis_timestamp || r.checked_at || 0);
         if (betDate >= cutoff) {
             filtered.push(r);
         }
