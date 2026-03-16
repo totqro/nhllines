@@ -9,10 +9,14 @@ on:
 jobs:
   analyze-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed to push data back to repo
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -35,13 +39,6 @@ jobs:
           }
           EOF
 
-      - name: Download previous data artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: nhl-data
-          path: data/
-        continue-on-error: true  # First run won't have artifacts
-
       - name: Restore ML models
         uses: actions/download-artifact@v4
         with:
@@ -55,7 +52,7 @@ jobs:
       - name: Run NHL analysis
         run: python main.py --stake 0.50
 
-      - name: Check bet results
+      - name: Check and update bet results
         run: python -c "from src.analysis.bet_tracker import check_results; check_results(days_back=7)"
         continue-on-error: true
 
@@ -80,16 +77,14 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json
           firebase deploy --only hosting --project projects-brawlstars --non-interactive
 
-      - name: Save data artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: nhl-data
-          path: |
-            data/bet_results.json
-            data/analysis_history.json
-            data/latest_analysis.json
-          retention-days: 90
-          overwrite: true
+      - name: Commit updated data back to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/bet_results.json data/analysis_history.json data/latest_analysis.json
+          git diff --cached --quiet || git commit -m "chore: update NHL data [$(date +'%Y-%m-%d')]"
+          git push
+        continue-on-error: true
 
       - name: Save ML models
         uses: actions/upload-artifact@v4
