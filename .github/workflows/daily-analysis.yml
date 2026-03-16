@@ -59,10 +59,14 @@ jobs:
       - name: Build deploy folder
         run: |
           mkdir -p build/nhllines
+          # Root hub page (always rebuilt from source)
+          cp web/hub.html build/index.html
+          # NHL app files
           cp web/index.html build/nhllines/
           cp web/app.js build/nhllines/
           cp web/styles.css build/nhllines/
-          cp data/latest_analysis.json build/nhllines/
+          # Data files (with fallbacks)
+          cp data/latest_analysis.json build/nhllines/ 2>/dev/null || echo '{"recommendations":[],"games_analyzed":[],"timestamp":""}' > build/nhllines/latest_analysis.json
           cp data/bet_results.json build/nhllines/ 2>/dev/null || echo '{"results":{}}' > build/nhllines/bet_results.json
           cp data/analysis_history.json build/nhllines/ 2>/dev/null || true
 
