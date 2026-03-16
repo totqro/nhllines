@@ -99,6 +99,7 @@ def check_results(days_back: int = 7):
         updated += 1
     
     # Save updated results
+    BET_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     BET_LOG_PATH.write_text(json.dumps(results_log, indent=2, default=str))
     
     print(f"✅ Updated {updated} bet results")

@@ -79,6 +79,7 @@ def save_analysis(analysis_data: dict):
     history["last_updated"] = datetime.now().isoformat()
     history["total_analyses"] = len(filtered)
     
+    HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
     HISTORY_PATH.write_text(json.dumps(history, indent=2, default=str))
     
     # Clean up old entries

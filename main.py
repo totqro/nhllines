@@ -729,6 +729,7 @@ def run_analysis(
     }
 
     output_path = Path(__file__).parent / "data" / "latest_analysis.json"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(output, indent=2, default=str))
     print(f"Full analysis saved to: {output_path}")
     
