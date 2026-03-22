@@ -1,6 +1,1588 @@
 {
   "analyses": [
     {
+      "timestamp": "2026-03-22T14:39:06.455011",
+      "stake": 0.5,
+      "days_back": 90,
+      "min_edge": 0.02,
+      "n_historical_games": 575,
+      "games_analyzed": [
+        {
+          "game": "WPG @ NYR",
+          "home": "NYR",
+          "away": "WPG",
+          "model_probs": {
+            "home_win_prob": 0.5074516768160682,
+            "away_win_prob": 0.4925483231839318,
+            "expected_total": 5.245788668533692,
+            "over_prob": 0.4205817143709881,
+            "under_prob": 0.5794182856290119,
+            "home_cover_prob": 0.44660951443651176,
+            "away_cover_prob": 0.5533904855634882,
+            "total_line": 6.0,
+            "spread_line": -1.5,
+            "n_games": 50,
+            "avg_similarity": 0.7255284386288666,
+            "confidence": 0.45466478274470157,
+            "raw_confidence": 0.31486889653031014,
+            "raw_home_win_prob": 0.4210138643401402,
+            "raw_over_prob": 0.38250821440634253,
+            "goal_distribution": {
+              "2": 0.04,
+              "3": 0.1,
+              "4": 0.14,
+              "5": 0.3,
+              "6": 0.12,
+              "7": 0.16,
+              "8": 0.06,
+              "9": 0.04,
+              "10": 0.04
+            }
+          },
+          "market_probs": {
+            "home_win_prob": 0.5249389900290301,
+            "away_win_prob": 0.47506100997096995,
+            "over_prob": 0.520805482178827,
+            "under_prob": 0.47919451782117295,
+            "spread_home_cover_prob": 0.32013561084866343,
+            "total_line": 6.0,
+            "spread_line": -1.5,
+            "n_books_ml": 15,
+            "n_books_total": 15,
+            "n_books_spread": 15
+          },
+          "blended_probs": {
+            "home_win_prob": 0.5161985449005024,
+            "away_win_prob": 0.48380145509949757,
+            "over_prob": 0.47071200398519497,
+            "under_prob": 0.529287996014805,
+            "home_cover_prob": 0.370706591126225,
+            "away_cover_prob": 0.48380145509949757,
+            "expected_total": 5.245788668533692,
+            "model_confidence": 0.45466478274470157,
+            "effective_model_weight": 0.49981635383811757
+          },
+          "n_similar": 50,
+          "n_bets": 1,
+          "context_indicators": {
+            "fatigue": [],
+            "goalie": [],
+            "injuries": [
+              {
+                "team": "NYR",
+                "impact": 10,
+                "severity": "negative"
+              },
+              {
+                "team": "WPG",
+                "impact": 10,
+                "severity": "negative"
+              }
+            ],
+            "splits": [],
+            "advanced": []
+          },
+          "goalie_matchup": {
+            "home": null,
+            "away": null
+          },
+          "team_splits": {
+            "home": {
+              "games": 10,
+              "wins": 4,
+              "losses": 5,
+              "ot_losses": 1,
+              "win_pct": 0.4,
+              "goals_for": 30,
+              "goals_against": 31,
+              "gf_pg": 3.0,
+              "ga_pg": 3.1,
+              "goal_diff": -0.1
+            },
+            "away": {
+              "games": 10,
+              "wins": 4,
+              "losses": 4,
+              "ot_losses": 2,
+              "win_pct": 0.4,
+              "goals_for": 26,
+              "goals_against": 29,
+              "gf_pg": 2.6,
+              "ga_pg": 2.9,
+              "goal_diff": -0.3
+            }
+          },
+          "injuries": {
+            "home": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 10,
+              "positions_affected": {
+                "F": 0,
+                "D": 4,
+                "G": 2
+              }
+            },
+            "away": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 6,
+              "positions_affected": {
+                "F": 0,
+                "D": 2,
+                "G": 0
+              }
+            }
+          },
+          "advanced_stats": {
+            "home": {
+              "xGF_per_60": 2.698550724637681,
+              "xGA_per_60": 3.0427536231884056,
+              "xGF_pct": 47.00239808153477,
+              "corsi_pct": 47.00239808153477,
+              "fenwick_pct": 47.00239808153477,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            },
+            "away": {
+              "xGF_per_60": 2.698550724637681,
+              "xGA_per_60": 2.9876811594202897,
+              "xGF_pct": 47.45762711864407,
+              "corsi_pct": 47.45762711864407,
+              "fenwick_pct": 47.45762711864407,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            }
+          }
+        },
+        {
+          "game": "COL @ WSH",
+          "home": "WSH",
+          "away": "COL",
+          "model_probs": {
+            "home_win_prob": 0.42142378589451857,
+            "away_win_prob": 0.5785762141054814,
+            "expected_total": 6.238436974891801,
+            "over_prob": 0.43012746744972497,
+            "under_prob": 0.569872532550275,
+            "home_cover_prob": 0.47547064876213574,
+            "away_cover_prob": 0.5245293512378643,
+            "total_line": 6.5,
+            "spread_line": 1.5,
+            "n_games": 50,
+            "avg_similarity": 0.7131022015625397,
+            "confidence": 0.42539468746379844,
+            "raw_confidence": 0.26983798071353604,
+            "raw_home_win_prob": 0.4627176786931571,
+            "raw_over_prob": 0.39380028098578423,
+            "goal_distribution": {
+              "1": 0.02,
+              "3": 0.14,
+              "4": 0.06,
+              "5": 0.24,
+              "6": 0.18,
+              "7": 0.14,
+              "8": 0.08,
+              "9": 0.06,
+              "11": 0.04,
+              "12": 0.02,
+              "15": 0.02
+            }
+          },
+          "market_probs": {
+            "home_win_prob": 0.39588713426548683,
+            "away_win_prob": 0.6041128657345133,
+            "over_prob": 0.4951905180710449,
+            "under_prob": 0.504809481928955,
+            "spread_home_cover_prob": 0.6082599369985668,
+            "total_line": 6.0,
+            "spread_line": 1.5,
+            "n_books_ml": 15,
+            "n_books_total": 15,
+            "n_books_spread": 15
+          },
+          "blended_probs": {
+            "home_win_prob": 0.4083707769404845,
+            "away_win_prob": 0.5916292230595155,
+            "over_prob": 0.4633843170427763,
+            "under_prob": 0.5366156829572237,
+            "home_cover_prob": 0.4083707769404845,
+            "away_cover_prob": 0.443671508031644,
+            "expected_total": 6.238436974891801,
+            "model_confidence": 0.42539468746379844,
+            "effective_model_weight": 0.4888519785736317
+          },
+          "n_similar": 50,
+          "n_bets": 0,
+          "context_indicators": {
+            "fatigue": [],
+            "goalie": [],
+            "injuries": [
+              {
+                "team": "WSH",
+                "impact": 10,
+                "severity": "negative"
+              },
+              {
+                "team": "COL",
+                "impact": 10,
+                "severity": "negative"
+              }
+            ],
+            "splits": [],
+            "advanced": []
+          },
+          "goalie_matchup": {
+            "home": null,
+            "away": {
+              "name": "Scott Wedgewood",
+              "quality_score": 63.6,
+              "recent_save_pct": 0.91,
+              "recent_gaa": 2.19,
+              "recent_quality_starts": 8
+            }
+          },
+          "team_splits": {
+            "home": {
+              "games": 10,
+              "wins": 7,
+              "losses": 3,
+              "ot_losses": 0,
+              "win_pct": 0.7,
+              "goals_for": 34,
+              "goals_against": 25,
+              "gf_pg": 3.4,
+              "ga_pg": 2.5,
+              "goal_diff": 0.9
+            },
+            "away": {
+              "games": 10,
+              "wins": 6,
+              "losses": 4,
+              "ot_losses": 0,
+              "win_pct": 0.6,
+              "goals_for": 35,
+              "goals_against": 28,
+              "gf_pg": 3.5,
+              "ga_pg": 2.8,
+              "goal_diff": 0.7
+            }
+          },
+          "injuries": {
+            "home": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 7,
+              "positions_affected": {
+                "F": 0,
+                "D": 1,
+                "G": 0
+              }
+            },
+            "away": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 12,
+              "positions_affected": {
+                "F": 0,
+                "D": 0,
+                "G": 0
+              }
+            }
+          },
+          "advanced_stats": {
+            "home": {
+              "xGF_per_60": 2.9585714285714286,
+              "xGA_per_60": 2.782142857142857,
+              "xGF_pct": 51.536643026004725,
+              "corsi_pct": 51.536643026004725,
+              "fenwick_pct": 51.536643026004725,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            },
+            "away": {
+              "xGF_per_60": 3.5485294117647057,
+              "xGA_per_60": 2.4169117647058824,
+              "xGF_pct": 59.4847775175644,
+              "corsi_pct": 59.4847775175644,
+              "fenwick_pct": 59.4847775175644,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            }
+          }
+        },
+        {
+          "game": "CAR @ PIT",
+          "home": "PIT",
+          "away": "CAR",
+          "model_probs": {
+            "home_win_prob": 0.4264798900891853,
+            "away_win_prob": 0.5735200956056999,
+            "expected_total": 6.321009541831097,
+            "over_prob": 0.47056366891742657,
+            "under_prob": 0.5294363310825734,
+            "home_cover_prob": 0.5398939063551932,
+            "away_cover_prob": 0.4601060936448068,
+            "total_line": 6.5,
+            "spread_line": 1.5,
+            "n_games": 50,
+            "avg_similarity": 0.7120740479605567,
+            "confidence": 0.4486646007714006,
+            "raw_confidence": 0.3056378473406163,
+            "raw_home_win_prob": 0.559343401105598,
+            "raw_over_prob": 0.45621256071146965,
+            "goal_distribution": {
+              "1": 0.02,
+              "3": 0.12,
+              "4": 0.04,
+              "5": 0.24,
+              "6": 0.14,
+              "7": 0.16,
+              "8": 0.04,
+              "9": 0.16,
+              "11": 0.04,
+              "12": 0.02,
+              "15": 0.02
+            }
+          },
+          "market_probs": {
+            "home_win_prob": 0.43511826190028585,
+            "away_win_prob": 0.5648817380997142,
+            "over_prob": 0.5209834802653343,
+            "under_prob": 0.47901651973466575,
+            "spread_home_cover_prob": 0.6388458873083704,
+            "total_line": 6.5,
+            "spread_line": 1.5,
+            "n_books_ml": 15,
+            "n_books_total": 15,
+            "n_books_spread": 15
+          },
+          "blended_probs": {
+            "home_win_prob": 0.4308197395943766,
+            "away_win_prob": 0.5691802604056234,
+            "over_prob": 0.4958941823654439,
+            "under_prob": 0.5041058176345561,
+            "home_cover_prob": 0.4308197395943766,
+            "away_cover_prob": 0.40054554493302075,
+            "expected_total": 6.321009541831097,
+            "model_confidence": 0.4486646007714006,
+            "effective_model_weight": 0.49760792889066485
+          },
+          "n_similar": 50,
+          "n_bets": 0,
+          "context_indicators": {
+            "fatigue": [],
+            "goalie": [
+              {
+                "team": "CAR",
+                "type": "cold",
+                "value": 0.86,
+                "severity": "negative"
+              }
+            ],
+            "injuries": [
+              {
+                "team": "PIT",
+                "impact": 10,
+                "severity": "negative"
+              },
+              {
+                "team": "CAR",
+                "impact": 10,
+                "severity": "negative"
+              }
+            ],
+            "splits": [],
+            "advanced": []
+          },
+          "goalie_matchup": {
+            "home": null,
+            "away": {
+              "name": "Brandon Bussi",
+              "quality_score": 51.2,
+              "recent_save_pct": 0.86,
+              "recent_gaa": 3.21,
+              "recent_quality_starts": 1
+            }
+          },
+          "team_splits": {
+            "home": {
+              "games": 10,
+              "wins": 6,
+              "losses": 2,
+              "ot_losses": 2,
+              "win_pct": 0.6,
+              "goals_for": 41,
+              "goals_against": 31,
+              "gf_pg": 4.1,
+              "ga_pg": 3.1,
+              "goal_diff": 1.0
+            },
+            "away": {
+              "games": 10,
+              "wins": 5,
+              "losses": 2,
+              "ot_losses": 3,
+              "win_pct": 0.5,
+              "goals_for": 33,
+              "goals_against": 27,
+              "gf_pg": 3.3,
+              "ga_pg": 2.7,
+              "goal_diff": 0.6
+            }
+          },
+          "injuries": {
+            "home": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 19,
+              "positions_affected": {
+                "F": 0,
+                "D": 7,
+                "G": 1
+              }
+            },
+            "away": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 10,
+              "positions_affected": {
+                "F": 0,
+                "D": 5,
+                "G": 2
+              }
+            }
+          },
+          "advanced_stats": {
+            "home": {
+              "xGF_per_60": 3.3043478260869565,
+              "xGA_per_60": 2.946376811594203,
+              "xGF_pct": 52.863436123348016,
+              "corsi_pct": 52.863436123348016,
+              "fenwick_pct": 52.863436123348016,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            },
+            "away": {
+              "xGF_per_60": 3.3731884057971016,
+              "xGA_per_60": 2.822463768115942,
+              "xGF_pct": 54.44444444444444,
+              "corsi_pct": 54.44444444444444,
+              "fenwick_pct": 54.44444444444444,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            }
+          }
+        },
+        {
+          "game": "NSH @ CHI",
+          "home": "CHI",
+          "away": "NSH",
+          "model_probs": {
+            "home_win_prob": 0.4705537966453372,
+            "away_win_prob": 0.529446189049548,
+            "expected_total": 6.164921672361819,
+            "over_prob": 0.40888645080290104,
+            "under_prob": 0.5911135491970989,
+            "home_cover_prob": 0.4576272100140152,
+            "away_cover_prob": 0.5423727899859848,
+            "total_line": 6.5,
+            "spread_line": -1.5,
+            "n_games": 50,
+            "avg_similarity": 0.7237247976856959,
+            "confidence": 0.49863884014678184,
+            "raw_confidence": 0.3825212925335105,
+            "raw_home_win_prob": 0.4397264912721151,
+            "raw_over_prob": 0.3703948145832183,
+            "goal_distribution": {
+              "2": 0.02,
+              "3": 0.1,
+              "4": 0.12,
+              "5": 0.22,
+              "6": 0.2,
+              "7": 0.14,
+              "8": 0.06,
+              "9": 0.1,
+              "10": 0.02,
+              "12": 0.02
+            }
+          },
+          "market_probs": {
+            "home_win_prob": 0.49445579549273727,
+            "away_win_prob": 0.5055442045072628,
+            "over_prob": 0.5071179595580998,
+            "under_prob": 0.4928820404419002,
+            "spread_home_cover_prob": 0.6183785310223124,
+            "total_line": 6.0,
+            "spread_line": 1.5,
+            "n_books_ml": 15,
+            "n_books_total": 15,
+            "n_books_spread": 15
+          },
+          "blended_probs": {
+            "home_win_prob": 0.4821358265696625,
+            "away_win_prob": 0.5178641734303375,
+            "over_prob": 0.4564858286280775,
+            "under_prob": 0.5435141713719225,
+            "home_cover_prob": 0.4821358265696625,
+            "away_cover_prob": 0.4479071814592065,
+            "expected_total": 6.164921672361819,
+            "model_confidence": 0.49863884014678184,
+            "effective_model_weight": 0.51543676333224
+          },
+          "n_similar": 50,
+          "n_bets": 0,
+          "context_indicators": {
+            "fatigue": [],
+            "goalie": [],
+            "injuries": [
+              {
+                "team": "CHI",
+                "impact": 10,
+                "severity": "negative"
+              },
+              {
+                "team": "NSH",
+                "impact": 9.9,
+                "severity": "negative"
+              }
+            ],
+            "splits": [],
+            "advanced": []
+          },
+          "goalie_matchup": {
+            "home": null,
+            "away": null
+          },
+          "team_splits": {
+            "home": {
+              "games": 10,
+              "wins": 3,
+              "losses": 7,
+              "ot_losses": 0,
+              "win_pct": 0.3,
+              "goals_for": 22,
+              "goals_against": 34,
+              "gf_pg": 2.2,
+              "ga_pg": 3.4,
+              "goal_diff": -1.2
+            },
+            "away": {
+              "games": 10,
+              "wins": 3,
+              "losses": 7,
+              "ot_losses": 0,
+              "win_pct": 0.3,
+              "goals_for": 29,
+              "goals_against": 34,
+              "gf_pg": 2.9,
+              "ga_pg": 3.4,
+              "goal_diff": -0.5
+            }
+          },
+          "injuries": {
+            "home": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 16,
+              "positions_affected": {
+                "F": 0,
+                "D": 6,
+                "G": 0
+              }
+            },
+            "away": {
+              "impact_score": 9.9,
+              "key_injuries": [],
+              "total_injuries": 5,
+              "positions_affected": {
+                "F": 0,
+                "D": 3,
+                "G": 0
+              }
+            }
+          },
+          "advanced_stats": {
+            "home": {
+              "xGF_per_60": 2.4920289855072464,
+              "xGA_per_60": 3.0565217391304342,
+              "xGF_pct": 44.91315136476427,
+              "corsi_pct": 44.91315136476427,
+              "fenwick_pct": 44.91315136476427,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            },
+            "away": {
+              "xGF_per_60": 2.836231884057971,
+              "xGA_per_60": 3.1666666666666665,
+              "xGF_pct": 47.24770642201835,
+              "corsi_pct": 47.24770642201835,
+              "fenwick_pct": 47.24770642201835,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            }
+          }
+        },
+        {
+          "game": "CBJ @ NYI",
+          "home": "NYI",
+          "away": "CBJ",
+          "model_probs": {
+            "home_win_prob": 0.44477772922297565,
+            "away_win_prob": 0.5552222564719096,
+            "expected_total": 6.402770721696286,
+            "over_prob": 0.48033146804289245,
+            "under_prob": 0.5196685319571075,
+            "home_cover_prob": 0.430906639094923,
+            "away_cover_prob": 0.569093360905077,
+            "total_line": 6.5,
+            "spread_line": 1.5,
+            "n_games": 50,
+            "avg_similarity": 0.7239110409226112,
+            "confidence": 0.4914229035258463,
+            "raw_confidence": 0.371419851578225,
+            "raw_home_win_prob": 0.4010928545580865,
+            "raw_over_prob": 0.4718444967008746,
+            "goal_distribution": {
+              "3": 0.08,
+              "4": 0.08,
+              "5": 0.26,
+              "6": 0.14,
+              "7": 0.16,
+              "8": 0.08,
+              "9": 0.08,
+              "10": 0.02,
+              "11": 0.04,
+              "12": 0.04,
+              "15": 0.02
+            }
+          },
+          "market_probs": {
+            "home_win_prob": 0.4684901400441037,
+            "away_win_prob": 0.5315098599558963,
+            "over_prob": 0.5015937738212216,
+            "under_prob": 0.4984062261787784,
+            "spread_home_cover_prob": 0.6759230406285581,
+            "total_line": 6.0,
+            "spread_line": 1.5,
+            "n_books_ml": 15,
+            "n_books_total": 15,
+            "n_books_spread": 15
+          },
+          "blended_probs": {
+            "home_win_prob": 0.45632713560946375,
+            "away_win_prob": 0.5436728643905362,
+            "over_prob": 0.49068752217842954,
+            "under_prob": 0.5093124778215705,
+            "home_cover_prob": 0.45632713560946375,
+            "away_cover_prob": 0.4246196026612685,
+            "expected_total": 6.402770721696286,
+            "model_confidence": 0.4914229035258463,
+            "effective_model_weight": 0.5129383311713952
+          },
+          "n_similar": 50,
+          "n_bets": 0,
+          "context_indicators": {
+            "fatigue": [],
+            "goalie": [],
+            "injuries": [
+              {
+                "team": "NYI",
+                "impact": 10,
+                "severity": "negative"
+              }
+            ],
+            "splits": [],
+            "advanced": []
+          },
+          "goalie_matchup": {
+            "home": null,
+            "away": {
+              "name": "Jet Greaves",
+              "quality_score": 57.1,
+              "recent_save_pct": 0.902,
+              "recent_gaa": 2.6,
+              "recent_quality_starts": 6
+            }
+          },
+          "team_splits": {
+            "home": {
+              "games": 10,
+              "wins": 7,
+              "losses": 2,
+              "ot_losses": 1,
+              "win_pct": 0.7,
+              "goals_for": 37,
+              "goals_against": 30,
+              "gf_pg": 3.7,
+              "ga_pg": 3.0,
+              "goal_diff": 0.7
+            },
+            "away": {
+              "games": 10,
+              "wins": 7,
+              "losses": 3,
+              "ot_losses": 0,
+              "win_pct": 0.7,
+              "goals_for": 34,
+              "goals_against": 29,
+              "gf_pg": 3.4,
+              "ga_pg": 2.9,
+              "goal_diff": 0.5
+            }
+          },
+          "injuries": {
+            "home": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 14,
+              "positions_affected": {
+                "F": 0,
+                "D": 3,
+                "G": 3
+              }
+            },
+            "away": {
+              "impact_score": 0,
+              "key_injuries": [],
+              "total_injuries": 0,
+              "positions_affected": {}
+            }
+          },
+          "advanced_stats": {
+            "home": {
+              "xGF_per_60": 2.782142857142857,
+              "xGA_per_60": 2.741428571428571,
+              "xGF_pct": 50.368550368550366,
+              "corsi_pct": 50.368550368550366,
+              "fenwick_pct": 50.368550368550366,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            },
+            "away": {
+              "xGF_per_60": 3.139130434782609,
+              "xGA_per_60": 2.946376811594203,
+              "xGF_pct": 51.58371040723983,
+              "corsi_pct": 51.58371040723983,
+              "fenwick_pct": 51.58371040723983,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            }
+          }
+        },
+        {
+          "game": "VGK @ DAL",
+          "home": "DAL",
+          "away": "VGK",
+          "model_probs": {
+            "home_win_prob": 0.7338822077037888,
+            "away_win_prob": 0.2661177922962113,
+            "expected_total": 5.335871502328311,
+            "over_prob": 0.4718818243282341,
+            "under_prob": 0.5281181756717659,
+            "home_cover_prob": 0.5888856371094776,
+            "away_cover_prob": 0.4111143628905224,
+            "total_line": 6.5,
+            "spread_line": -1.5,
+            "n_games": 50,
+            "avg_similarity": 0.7190484173837837,
+            "confidence": 0.528145034894274,
+            "raw_confidence": 0.4279154382988832,
+            "raw_home_win_prob": 0.6232526429433436,
+            "raw_over_prob": 0.461010129656585,
+            "goal_distribution": {
+              "3": 0.04,
+              "4": 0.1,
+              "5": 0.3,
+              "6": 0.12,
+              "7": 0.16,
+              "8": 0.06,
+              "9": 0.16,
+              "10": 0.02,
+              "11": 0.02,
+              "15": 0.02
+            }
+          },
+          "market_probs": {
+            "home_win_prob": 0.5693258374251695,
+            "away_win_prob": 0.4306741625748306,
+            "over_prob": 0.5082511968021916,
+            "under_prob": 0.49174880319780845,
+            "spread_home_cover_prob": 0.35241180299311065,
+            "total_line": 6.0,
+            "spread_line": -1.5,
+            "n_books_ml": 15,
+            "n_books_total": 15,
+            "n_books_spread": 15
+          },
+          "blended_probs": {
+            "home_win_prob": 0.6557852850115579,
+            "away_win_prob": 0.34421471498844214,
+            "over_prob": 0.4891423902100318,
+            "under_prob": 0.5108576097899682,
+            "home_cover_prob": 0.4518082446220508,
+            "away_cover_prob": 0.34421471498844214,
+            "expected_total": 5.335871502328311,
+            "model_confidence": 0.528145034894274,
+            "effective_model_weight": 0.5254093016271516
+          },
+          "n_similar": 50,
+          "n_bets": 2,
+          "context_indicators": {
+            "fatigue": [],
+            "goalie": [],
+            "injuries": [
+              {
+                "team": "DAL",
+                "impact": 10,
+                "severity": "negative"
+              }
+            ],
+            "splits": [
+              {
+                "team": "DAL",
+                "type": "strong_home",
+                "value": 0.8,
+                "severity": "positive"
+              }
+            ],
+            "advanced": []
+          },
+          "goalie_matchup": {
+            "home": {
+              "name": "Jake Oettinger",
+              "quality_score": 54.6,
+              "recent_save_pct": 0.915,
+              "recent_gaa": 2.14,
+              "recent_quality_starts": 7
+            },
+            "away": null
+          },
+          "team_splits": {
+            "home": {
+              "games": 10,
+              "wins": 8,
+              "losses": 1,
+              "ot_losses": 1,
+              "win_pct": 0.8,
+              "goals_for": 36,
+              "goals_against": 27,
+              "gf_pg": 3.6,
+              "ga_pg": 2.7,
+              "goal_diff": 0.9
+            },
+            "away": {
+              "games": 10,
+              "wins": 3,
+              "losses": 6,
+              "ot_losses": 1,
+              "win_pct": 0.3,
+              "goals_for": 27,
+              "goals_against": 37,
+              "gf_pg": 2.7,
+              "ga_pg": 3.7,
+              "goal_diff": -1.0
+            }
+          },
+          "injuries": {
+            "home": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 11,
+              "positions_affected": {
+                "F": 0,
+                "D": 0,
+                "G": 0
+              }
+            },
+            "away": {
+              "impact_score": 0,
+              "key_injuries": [],
+              "total_injuries": 0,
+              "positions_affected": {}
+            }
+          },
+          "advanced_stats": {
+            "home": {
+              "xGF_per_60": 3.2768115942028984,
+              "xGA_per_60": 2.5746376811594205,
+              "xGF_pct": 55.99999999999999,
+              "corsi_pct": 56.00000000000001,
+              "fenwick_pct": 56.00000000000001,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            },
+            "away": {
+              "xGF_per_60": 2.999285714285714,
+              "xGA_per_60": 2.972142857142857,
+              "xGF_pct": 50.22727272727272,
+              "corsi_pct": 50.227272727272734,
+              "fenwick_pct": 50.227272727272734,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            }
+          }
+        },
+        {
+          "game": "BUF @ ANA",
+          "home": "ANA",
+          "away": "BUF",
+          "model_probs": {
+            "home_win_prob": 0.46895939758335037,
+            "away_win_prob": 0.5310406167217643,
+            "expected_total": 6.5216392715429095,
+            "over_prob": 0.4930515209341324,
+            "under_prob": 0.5069484790658676,
+            "home_cover_prob": 0.48859584199531114,
+            "away_cover_prob": 0.5114041580046889,
+            "total_line": 6.5,
+            "spread_line": -1.5,
+            "n_games": 50,
+            "avg_similarity": 0.7187531469983577,
+            "confidence": 0.4323280127021478,
+            "raw_confidence": 0.2805046349263813,
+            "raw_home_win_prob": 0.4827784263418931,
+            "raw_over_prob": 0.489507007532213,
+            "goal_distribution": {
+              "3": 0.08,
+              "4": 0.08,
+              "5": 0.2,
+              "6": 0.18,
+              "7": 0.2,
+              "8": 0.06,
+              "9": 0.08,
+              "11": 0.06,
+              "12": 0.04,
+              "15": 0.02
+            }
+          },
+          "market_probs": {
+            "home_win_prob": 0.49531818770967,
+            "away_win_prob": 0.50468181229033,
+            "over_prob": 0.539755027979186,
+            "under_prob": 0.46024497202081405,
+            "spread_home_cover_prob": 0.6189702180013127,
+            "total_line": 6.5,
+            "spread_line": 1.5,
+            "n_books_ml": 15,
+            "n_books_total": 15,
+            "n_books_spread": 15
+          },
+          "blended_probs": {
+            "home_win_prob": 0.4823630125959214,
+            "away_win_prob": 0.5176369874040786,
+            "over_prob": 0.5168005558924453,
+            "under_prob": 0.48319944410755467,
+            "home_cover_prob": 0.4823630125959214,
+            "away_cover_prob": 0.43229231304534377,
+            "expected_total": 6.5216392715429095,
+            "model_confidence": 0.4323280127021478,
+            "effective_model_weight": 0.4914935416862195
+          },
+          "n_similar": 50,
+          "n_bets": 0,
+          "context_indicators": {
+            "fatigue": [],
+            "goalie": [
+              {
+                "team": "ANA",
+                "type": "cold",
+                "value": 0.877,
+                "severity": "negative"
+              },
+              {
+                "team": "BUF",
+                "type": "advantage",
+                "value": 15.300000000000004,
+                "severity": "positive"
+              }
+            ],
+            "injuries": [
+              {
+                "team": "ANA",
+                "impact": 10,
+                "severity": "negative"
+              },
+              {
+                "team": "BUF",
+                "impact": 10,
+                "severity": "negative"
+              }
+            ],
+            "splits": [
+              {
+                "team": "ANA",
+                "type": "strong_home",
+                "value": 0.8,
+                "severity": "positive"
+              },
+              {
+                "team": "BUF",
+                "type": "strong_road",
+                "value": 0.9,
+                "severity": "positive"
+              }
+            ],
+            "advanced": []
+          },
+          "goalie_matchup": {
+            "home": {
+              "name": "Lukas Dostal",
+              "quality_score": 46.3,
+              "recent_save_pct": 0.877,
+              "recent_gaa": 3.33,
+              "recent_quality_starts": 3
+            },
+            "away": {
+              "name": "Alex Lyon",
+              "quality_score": 61.6,
+              "recent_save_pct": 0.923,
+              "recent_gaa": 2.2,
+              "recent_quality_starts": 6
+            }
+          },
+          "team_splits": {
+            "home": {
+              "games": 10,
+              "wins": 8,
+              "losses": 2,
+              "ot_losses": 0,
+              "win_pct": 0.8,
+              "goals_for": 39,
+              "goals_against": 34,
+              "gf_pg": 3.9,
+              "ga_pg": 3.4,
+              "goal_diff": 0.5
+            },
+            "away": {
+              "games": 10,
+              "wins": 9,
+              "losses": 0,
+              "ot_losses": 1,
+              "win_pct": 0.9,
+              "goals_for": 45,
+              "goals_against": 22,
+              "gf_pg": 4.5,
+              "ga_pg": 2.2,
+              "goal_diff": 2.3
+            }
+          },
+          "injuries": {
+            "home": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 5,
+              "positions_affected": {
+                "F": 0,
+                "D": 0,
+                "G": 2
+              }
+            },
+            "away": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 12,
+              "positions_affected": {
+                "F": 0,
+                "D": 1,
+                "G": 0
+              }
+            }
+          },
+          "advanced_stats": {
+            "home": {
+              "xGF_per_60": 3.1528985507246374,
+              "xGA_per_60": 3.2630434782608693,
+              "xGF_pct": 49.141630901287556,
+              "corsi_pct": 49.141630901287556,
+              "fenwick_pct": 49.141630901287556,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            },
+            "away": {
+              "xGF_per_60": 3.3385714285714285,
+              "xGA_per_60": 2.7278571428571428,
+              "xGF_pct": 55.033557046979865,
+              "corsi_pct": 55.033557046979865,
+              "fenwick_pct": 55.033557046979865,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            }
+          }
+        },
+        {
+          "game": "TBL @ CGY",
+          "home": "CGY",
+          "away": "TBL",
+          "model_probs": {
+            "home_win_prob": 0.40690883915001796,
+            "away_win_prob": 0.5930911465448673,
+            "expected_total": 6.491371994185665,
+            "over_prob": 0.46709471336612784,
+            "under_prob": 0.5329052866338722,
+            "home_cover_prob": 0.4741187791101184,
+            "away_cover_prob": 0.5258812208898815,
+            "total_line": 6.5,
+            "spread_line": 1.5,
+            "n_games": 50,
+            "avg_similarity": 0.7072541586828858,
+            "confidence": 0.40416618713566976,
+            "raw_confidence": 0.23717874943949196,
+            "raw_home_win_prob": 0.45986608045342403,
+            "raw_over_prob": 0.4489738860450301,
+            "goal_distribution": {
+              "3": 0.12,
+              "4": 0.06,
+              "5": 0.2,
+              "6": 0.16,
+              "7": 0.18,
+              "8": 0.06,
+              "9": 0.18,
+              "10": 0.02,
+              "12": 0.02
+            }
+          },
+          "market_probs": {
+            "home_win_prob": 0.3913374213624106,
+            "away_win_prob": 0.6086625786375894,
+            "over_prob": 0.48365623202387054,
+            "under_prob": 0.5163437679761295,
+            "spread_home_cover_prob": 0.5958583358668772,
+            "total_line": 6.5,
+            "spread_line": 1.5,
+            "n_books_ml": 15,
+            "n_books_total": 15,
+            "n_books_spread": 15
+          },
+          "blended_probs": {
+            "home_win_prob": 0.39882075036977555,
+            "away_win_prob": 0.6011792496302244,
+            "over_prob": 0.4756970792564112,
+            "under_prob": 0.5243029207435888,
+            "home_cover_prob": 0.39882075036977555,
+            "away_cover_prob": 0.4509462477027264,
+            "expected_total": 6.491371994185665,
+            "model_confidence": 0.40416618713566976,
+            "effective_model_weight": 0.48058109476200533
+          },
+          "n_similar": 50,
+          "n_bets": 0,
+          "context_indicators": {
+            "fatigue": [],
+            "goalie": [],
+            "injuries": [
+              {
+                "team": "CGY",
+                "impact": 10,
+                "severity": "negative"
+              },
+              {
+                "team": "TBL",
+                "impact": 10,
+                "severity": "negative"
+              }
+            ],
+            "splits": [],
+            "advanced": []
+          },
+          "goalie_matchup": {
+            "home": null,
+            "away": null
+          },
+          "team_splits": {
+            "home": {
+              "games": 10,
+              "wins": 3,
+              "losses": 6,
+              "ot_losses": 1,
+              "win_pct": 0.3,
+              "goals_for": 22,
+              "goals_against": 36,
+              "gf_pg": 2.2,
+              "ga_pg": 3.6,
+              "goal_diff": -1.4
+            },
+            "away": {
+              "games": 10,
+              "wins": 4,
+              "losses": 4,
+              "ot_losses": 2,
+              "win_pct": 0.4,
+              "goals_for": 33,
+              "goals_against": 38,
+              "gf_pg": 3.3,
+              "ga_pg": 3.8,
+              "goal_diff": -0.5
+            }
+          },
+          "injuries": {
+            "home": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 10,
+              "positions_affected": {
+                "F": 0,
+                "D": 3,
+                "G": 1
+              }
+            },
+            "away": {
+              "impact_score": 10,
+              "key_injuries": [],
+              "total_injuries": 12,
+              "positions_affected": {
+                "F": 0,
+                "D": 8,
+                "G": 1
+              }
+            }
+          },
+          "advanced_stats": {
+            "home": {
+              "xGF_per_60": 2.3818840579710145,
+              "xGA_per_60": 2.946376811594203,
+              "xGF_pct": 44.70284237726098,
+              "corsi_pct": 44.70284237726098,
+              "fenwick_pct": 44.70284237726098,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            },
+            "away": {
+              "xGF_per_60": 3.464705882352941,
+              "xGA_per_60": 2.626470588235294,
+              "xGF_pct": 56.88073394495413,
+              "corsi_pct": 56.88073394495413,
+              "fenwick_pct": 56.88073394495413,
+              "shooting_pct": 33.33333333333333,
+              "save_pct": 0.6666666666666667,
+              "pdo": 100.0
+            }
+          }
+        }
+      ],
+      "recommendations": [
+        {
+          "game": "WPG @ NYR",
+          "bet_type": "Total",
+          "pick": "Under 5.5",
+          "book": "espnbet",
+          "odds": 120,
+          "ev": 0.13020912810295993,
+          "roi": 0.26041825620591985,
+          "edge": 0.11837193463905443,
+          "true_prob": 0.572917389184509,
+          "implied_prob": 0.45454545454545453,
+          "american_odds": 120,
+          "decimal_odds": 2.2,
+          "stake": 0.5,
+          "profit_if_win": 0.6000000000000001,
+          "loss_if_lose": 0.5,
+          "is_positive_ev": true,
+          "confidence": 0.45466478274470157,
+          "kelly_fraction": 0.0542538033762333,
+          "kelly_stake": 5.43,
+          "all_book_odds": [
+            {
+              "book": "espnbet",
+              "odds": 120,
+              "point": 5.5
+            },
+            {
+              "book": "hardrockbet",
+              "odds": 115,
+              "point": 5.5
+            },
+            {
+              "book": "draftkings",
+              "odds": 114,
+              "point": 5.5
+            },
+            {
+              "book": "fanduel",
+              "odds": 112,
+              "point": 5.5
+            },
+            {
+              "book": "fliff",
+              "odds": 105,
+              "point": 5.5
+            },
+            {
+              "book": "lowvig",
+              "odds": -104,
+              "point": 6.0
+            },
+            {
+              "book": "betonlineag",
+              "odds": -104,
+              "point": 6.0
+            },
+            {
+              "book": "betmgm",
+              "odds": -105,
+              "point": 6.0
+            },
+            {
+              "book": "betparx",
+              "odds": -109,
+              "point": 6.0
+            },
+            {
+              "book": "ballybet",
+              "odds": -109,
+              "point": 6.0
+            },
+            {
+              "book": "betrivers",
+              "odds": -110,
+              "point": 6.0
+            },
+            {
+              "book": "betus",
+              "odds": -110,
+              "point": 6.0
+            },
+            {
+              "book": "betanysports",
+              "odds": -110,
+              "point": 6.0
+            },
+            {
+              "book": "mybookieag",
+              "odds": -111,
+              "point": 6.0
+            },
+            {
+              "book": "bovada",
+              "odds": -112,
+              "point": 6.0
+            }
+          ]
+        },
+        {
+          "game": "VGK @ DAL",
+          "bet_type": "Total",
+          "pick": "Under 6.0",
+          "book": "betonlineag",
+          "odds": -108,
+          "ev": 0.11092723217915884,
+          "roi": 0.22185446435831768,
+          "edge": 0.11519366418604948,
+          "true_prob": 0.6344244334168188,
+          "implied_prob": 0.5192307692307693,
+          "american_odds": -108,
+          "decimal_odds": 1.925925925925926,
+          "stake": 0.5,
+          "profit_if_win": 0.462962962962963,
+          "loss_if_lose": 0.5,
+          "is_positive_ev": true,
+          "confidence": 0.528145034894274,
+          "kelly_fraction": 0.059900705376745765,
+          "kelly_stake": 5.99,
+          "all_book_odds": [
+            {
+              "book": "hardrockbet",
+              "odds": 115,
+              "point": 5.5
+            },
+            {
+              "book": "draftkings",
+              "odds": 114,
+              "point": 5.5
+            },
+            {
+              "book": "fanduel",
+              "odds": 112,
+              "point": 5.5
+            },
+            {
+              "book": "fliff",
+              "odds": 105,
+              "point": 5.5
+            },
+            {
+              "book": "bovada",
+              "odds": -108,
+              "point": 6.0
+            },
+            {
+              "book": "lowvig",
+              "odds": -108,
+              "point": 6.0
+            },
+            {
+              "book": "betonlineag",
+              "odds": -108,
+              "point": 6.0
+            },
+            {
+              "book": "betmgm",
+              "odds": -110,
+              "point": 6.0
+            },
+            {
+              "book": "betus",
+              "odds": -110,
+              "point": 6.0
+            },
+            {
+              "book": "betanysports",
+              "odds": -110,
+              "point": 6.0
+            },
+            {
+              "book": "mybookieag",
+              "odds": -113,
+              "point": 6.0
+            },
+            {
+              "book": "betparx",
+              "odds": -117,
+              "point": 6.0
+            },
+            {
+              "book": "ballybet",
+              "odds": -117,
+              "point": 6.0
+            },
+            {
+              "book": "betrivers",
+              "odds": -118,
+              "point": 6.0
+            },
+            {
+              "book": "espnbet",
+              "odds": -135,
+              "point": 6.5
+            }
+          ]
+        },
+        {
+          "game": "VGK @ DAL",
+          "bet_type": "Moneyline",
+          "pick": "DAL ML",
+          "book": "hardrockbet",
+          "odds": -140,
+          "ev": 0.06210167286704962,
+          "roi": 0.12420334573409925,
+          "edge": 0.07245195167822449,
+          "true_prob": 0.6557852850115579,
+          "implied_prob": 0.5833333333333334,
+          "american_odds": -140,
+          "decimal_odds": 1.7142857142857144,
+          "stake": 0.5,
+          "profit_if_win": 0.3571428571428572,
+          "loss_if_lose": 0.5,
+          "is_positive_ev": true,
+          "confidence": 0.528145034894274,
+          "kelly_fraction": 0.043471171006934727,
+          "kelly_stake": 4.35,
+          "all_book_odds": [
+            {
+              "book": "hardrockbet",
+              "odds": -140
+            },
+            {
+              "book": "espnbet",
+              "odds": -140
+            },
+            {
+              "book": "draftkings",
+              "odds": -142
+            },
+            {
+              "book": "bovada",
+              "odds": -142
+            },
+            {
+              "book": "lowvig",
+              "odds": -143
+            },
+            {
+              "book": "betonlineag",
+              "odds": -143
+            },
+            {
+              "book": "betanysports",
+              "odds": -143
+            },
+            {
+              "book": "betmgm",
+              "odds": -145
+            },
+            {
+              "book": "betus",
+              "odds": -145
+            },
+            {
+              "book": "fanduel",
+              "odds": -146
+            },
+            {
+              "book": "betparx",
+              "odds": -148
+            },
+            {
+              "book": "ballybet",
+              "odds": -148
+            },
+            {
+              "book": "mybookieag",
+              "odds": -148
+            },
+            {
+              "book": "betrivers",
+              "odds": -150
+            },
+            {
+              "book": "fliff",
+              "odds": -160
+            }
+          ]
+        }
+      ],
+      "quota_info": {
+        "total_keys": 3,
+        "total_remaining": 1146,
+        "total_used": 354,
+        "keys": [
+          {
+            "index": 0,
+            "used": 354,
+            "remaining": 146,
+            "last_updated": "2026-03-22T14:39:02.377434"
+          },
+          {
+            "index": 1,
+            "used": 0,
+            "remaining": 500,
+            "last_updated": "Never"
+          },
+          {
+            "index": 2,
+            "used": 0,
+            "remaining": 500,
+            "last_updated": "Never"
+          }
+        ]
+      }
+    },
+    {
       "timestamp": "2026-03-21T20:47:23.329971",
       "stake": 0.5,
       "days_back": 90,
@@ -48240,6 +49822,6 @@
       }
     }
   ],
-  "last_updated": "2026-03-21T20:47:23.344945",
-  "total_analyses": 42
+  "last_updated": "2026-03-22T14:39:06.471186",
+  "total_analyses": 43
 }
