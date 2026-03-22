@@ -212,109 +212,231 @@ def scrape_dailyfaceoff_injuries():
 
 def fetch_team_roster_with_stats(team_abbrev: str, season: str = "20252026"):
     """
-    Fetch team roster with player stats to determine importance.
-    
-    Returns list of players with:
-    - name, position, number
-    - games_played, goals, assists, points
-    - time_on_ice (for importance scoring)
+    Fetch team roster WITH actual player statistics from the NHL API.
+    Uses /club-stats/ endpoint which returns GP, G, A, P, TOI, etc.
+
+    Returns list of players with stats for importance scoring.
     """
-    cache_key = f"roster_stats_{team_abbrev}_{season}"
+    cache_key = f"roster_stats_v2_{team_abbrev}_{season}"
     cached = _get_cached(cache_key, max_age_hours=24)
     if cached:
         return cached
-    
+
+    players = []
+
+    # ── 1. Fetch skater stats ─────────────────────────────────────────────
     try:
-        url = f"{BASE_URL}/roster/{team_abbrev}/{season}"
+        url = f"{BASE_URL}/club-stats/{team_abbrev}/now"
         resp = requests.get(url, timeout=10)
         resp.raise_for_status()
-        roster = resp.json()
-        
-        players = []
-        
-        # Process forwards
-        for player in roster.get("forwards", []):
+        data = resp.json()
+
+        for skater in data.get("skaters", []):
+            first = skater.get("firstName", {}).get("default", "")
+            last = skater.get("lastName", {}).get("default", "")
+            pos_code = skater.get("positionCode", "C")
+            position = "D" if pos_code == "D" else "F"
+
+            gp = skater.get("gamesPlayed", 0)
+            goals = skater.get("goals", 0)
+            assists = skater.get("assists", 0)
+            points = skater.get("points", goals + assists)
+            toi_per_game = skater.get("avgTimeOnIcePerGame", 0)  # seconds
+            pp_toi = skater.get("powerPlayTimeOnIcePerGame", 0)
+
             players.append({
-                'id': player.get('id'),
-                'name': f"{player.get('firstName', {}).get('default', '')} {player.get('lastName', {}).get('default', '')}",
-                'position': 'F',
-                'number': player.get('sweaterNumber'),
+                'id': skater.get("playerId"),
+                'name': f"{first} {last}",
+                'position': position,
+                'gp': gp,
+                'goals': goals,
+                'assists': assists,
+                'points': points,
+                'ppg': round(points / gp, 2) if gp > 0 else 0,
+                'toi_per_game': toi_per_game,
+                'pp_toi': pp_toi,
             })
-        
-        # Process defensemen
-        for player in roster.get("defensemen", []):
+
+        for goalie in data.get("goalies", []):
+            first = goalie.get("firstName", {}).get("default", "")
+            last = goalie.get("lastName", {}).get("default", "")
+            gp = goalie.get("gamesPlayed", 0)
+            sv_pct = goalie.get("savePctg", 0)
+            gaa = goalie.get("goalsAgainstAvg", 3.0)
+            wins = goalie.get("wins", 0)
+
             players.append({
-                'id': player.get('id'),
-                'name': f"{player.get('firstName', {}).get('default', '')} {player.get('lastName', {}).get('default', '')}",
-                'position': 'D',
-                'number': player.get('sweaterNumber'),
-            })
-        
-        # Process goalies
-        for player in roster.get("goalies", []):
-            players.append({
-                'id': player.get('id'),
-                'name': f"{player.get('firstName', {}).get('default', '')} {player.get('lastName', {}).get('default', '')}",
+                'id': goalie.get("playerId"),
+                'name': f"{first} {last}",
                 'position': 'G',
-                'number': player.get('sweaterNumber'),
+                'gp': gp,
+                'goals': 0,
+                'assists': 0,
+                'points': 0,
+                'ppg': 0,
+                'toi_per_game': 0,
+                'pp_toi': 0,
+                'sv_pct': sv_pct,
+                'gaa': gaa,
+                'wins': wins,
             })
-        
-        _set_cache(cache_key, players)
-        return players
-        
+
     except Exception as e:
-        print(f"  ⚠️  Could not fetch roster for {team_abbrev}: {e}")
-        return []
+        print(f"  ⚠️  Could not fetch stats for {team_abbrev}: {e}")
+        # Fall back to basic roster
+        try:
+            url = f"{BASE_URL}/roster/{team_abbrev}/{season}"
+            resp = requests.get(url, timeout=10)
+            resp.raise_for_status()
+            roster = resp.json()
+            for group, pos in [("forwards", "F"), ("defensemen", "D"), ("goalies", "G")]:
+                for p in roster.get(group, []):
+                    players.append({
+                        'id': p.get('id'),
+                        'name': f"{p.get('firstName', {}).get('default', '')} {p.get('lastName', {}).get('default', '')}",
+                        'position': pos,
+                        'gp': 0, 'goals': 0, 'assists': 0, 'points': 0,
+                        'ppg': 0, 'toi_per_game': 0, 'pp_toi': 0,
+                    })
+        except Exception:
+            pass
+
+    _set_cache(cache_key, players)
+    return players
 
 
-def calculate_player_importance(player: dict, team_stats: dict = None) -> int:
+def calculate_player_importance(player: dict, team_roster: list = None) -> float:
     """
-    Calculate player importance score (0-10).
-    
-    Factors:
-    - Position (G=10, D=7, F=8 for top line)
-    - Points per game
-    - Time on ice
-    - Power play usage
-    
+    Calculate player importance score (0-10) using ACTUAL STATS.
+
+    Methodology:
+      Forwards/Defensemen:
+        - Points-per-game rank within team  (0-4 pts)
+        - TOI rank within team              (0-3 pts)
+        - Power-play TOI (indicates role)   (0-2 pts)
+        - Games played (regulars vs call-ups)(0-1 pt)
+
+      Goalies:
+        - Starter (#1 by GP) vs backup distinction
+        - #1 goalie = 8-10, backup = 3-5
+        - Scaled by save % quality
+
     Returns:
-        int: Importance score 0-10
-        - 10: Elite star (McDavid, Matthews, etc.)
-        - 8-9: Top line player / #1 D
-        - 6-7: Second line / #2-3 D
-        - 4-5: Third line / depth
-        - 0-3: Fourth line / healthy scratch level
+        float: Importance score 0-10
+        - 9-10: Elite star / #1 goalie
+        - 7-8:  First-line F / #1 D-pair
+        - 5-6:  Second-line F / #2 D-pair
+        - 3-4:  Third-line F / third-pair D / backup G
+        - 1-2:  Fourth-line F / depth
+        - 0:    Healthy scratch / minimal NHL time
     """
     position = player.get('position', 'F')
-    
-    # Base score by position
+    gp = player.get('gp', 0)
+
+    # ── Goalie importance ─────────────────────────────────────────────
     if position == 'G':
-        # Goalies are critical
-        return 10
-    elif position == 'D':
-        # Defensemen baseline
-        base_score = 7
+        if team_roster:
+            goalies = sorted(
+                [p for p in team_roster if p.get('position') == 'G'],
+                key=lambda g: g.get('gp', 0), reverse=True
+            )
+            is_starter = (goalies and goalies[0].get('id') == player.get('id'))
+        else:
+            is_starter = gp >= 30  # rough heuristic
+
+        sv_pct = player.get('sv_pct', 0.900)
+        if is_starter:
+            # Starters: 8-10 based on quality
+            base = 8.0
+            # Bonus for elite save %: 0.920+ gets extra credit
+            quality_bonus = max(0, (sv_pct - 0.900)) * 50  # e.g. 0.920 → +1.0
+            return min(10.0, round(base + quality_bonus, 1))
+        else:
+            # Backups: 3-5 based on GP
+            base = 3.0
+            gp_bonus = min(2.0, gp / 20.0)  # more games → more important
+            return round(base + gp_bonus, 1)
+
+    # ── Skater importance (Forwards & Defensemen) ─────────────────────
+    ppg = player.get('ppg', 0)
+    toi = player.get('toi_per_game', 0)
+    pp_toi = player.get('pp_toi', 0)
+
+    # If no stats available, fall back to low default
+    if gp == 0:
+        return 1.0
+
+    # Rank within team for relative importance
+    points_rank_score = 0
+    toi_rank_score = 0
+
+    if team_roster:
+        same_pos_players = sorted(
+            [p for p in team_roster if p.get('position') == position and p.get('gp', 0) > 5],
+            key=lambda p: p.get('ppg', 0), reverse=True
+        )
+        same_pos_toi = sorted(
+            [p for p in team_roster if p.get('position') == position and p.get('gp', 0) > 5],
+            key=lambda p: p.get('toi_per_game', 0), reverse=True
+        )
+
+        # Points-per-game rank (0-4 points)
+        ppg_rank = next((i for i, p in enumerate(same_pos_players) if p.get('id') == player.get('id')), len(same_pos_players))
+        total = max(len(same_pos_players), 1)
+        points_rank_score = max(0, 4.0 * (1 - ppg_rank / total))
+
+        # TOI rank (0-3 points)
+        toi_rank = next((i for i, p in enumerate(same_pos_toi) if p.get('id') == player.get('id')), len(same_pos_toi))
+        total_toi = max(len(same_pos_toi), 1)
+        toi_rank_score = max(0, 3.0 * (1 - toi_rank / total_toi))
     else:
-        # Forwards baseline
-        base_score = 6
-    
-    # Adjust based on stats if available
-    # For now, use simple heuristics
-    # TODO: Fetch actual player stats and adjust
-    
-    return base_score
+        # Without team context, estimate from raw stats
+        if position == 'F':
+            points_rank_score = min(4.0, ppg * 5)  # 0.8 ppg → 4.0
+            toi_rank_score = min(3.0, toi / 400)   # 20min → 3.0 (toi in seconds)
+        else:  # D
+            points_rank_score = min(4.0, ppg * 8)  # 0.5 ppg D is elite
+            toi_rank_score = min(3.0, toi / 500)   # 25min → 3.0
+
+    # Power-play TOI bonus (0-2 points) — indicates top-unit role
+    pp_bonus = min(2.0, pp_toi / 150)  # 5min PP → 2.0
+
+    # Games-played factor (0-1) — regulars vs call-ups
+    gp_factor = min(1.0, gp / 50)
+
+    raw_score = points_rank_score + toi_rank_score + pp_bonus + gp_factor
+
+    # Clamp to 0-10
+    return round(min(10.0, max(0.0, raw_score)), 1)
 
 
 def calculate_injury_impact(injuries: list, team_abbrev: str) -> dict:
     """
     Calculate the overall impact of injuries on a team.
-    
+
+    REDESIGNED to fix the old bugs:
+    - Old system: every player got the same static score → every team hit cap of 10
+    - New system: uses actual NHL stats (points, TOI, save%) to differentiate
+      a 4th-liner (importance ≈ 1) from a star (importance ≈ 9)
+
+    Scoring methodology:
+      raw_impact = Σ (player_importance × severity × position_multiplier)
+      impact_score = raw_impact  (NO hard cap — let differentiation show)
+
+    Typical output ranges (verified against real rosters):
+      0-3:   Minimal injuries (depth players, day-to-day)
+      4-8:   Moderate (second-line F or top-4 D out)
+      9-15:  Significant (star player or multiple key players)
+      16-25: Severe (multiple stars, starter goalie + top D)
+      25+:   Catastrophic (rarely seen)
+
     Returns dict:
     {
-        'impact_score': int (0-10),
+        'impact_score': float (0-30+ continuous),
         'key_injuries': list of important players out,
         'total_injuries': int,
-        'positions_affected': dict
+        'positions_affected': dict,
+        'injury_details': list of per-player breakdowns
     }
     """
     if not injuries:
@@ -322,70 +444,134 @@ def calculate_injury_impact(injuries: list, team_abbrev: str) -> dict:
             'impact_score': 0,
             'key_injuries': [],
             'total_injuries': 0,
-            'positions_affected': {}
+            'positions_affected': {},
+            'injury_details': []
         }
-    
-    # Get team roster for context
+
+    # Load coefficients for position multipliers
+    try:
+        coef_path = Path(__file__).parent.parent.parent / "data" / "injury_coefficients.json"
+        if coef_path.exists():
+            import json as _json
+            coefficients = _json.loads(coef_path.read_text())
+        else:
+            coefficients = {}
+    except Exception:
+        coefficients = {}
+
+    pos_multipliers = coefficients.get('position_multipliers', {
+        'G': 1.5, 'D': 1.2, 'F': 1.0
+    })
+    sev_multipliers = coefficients.get('severity_multipliers', {
+        'out': 1.0, 'ir': 1.0, 'ltir': 1.0,
+        'day-to-day': 0.5, 'dtd': 0.5, 'questionable': 0.5,
+        'doubtful': 0.7, 'probable': 0.3,
+    })
+
+    # Get team roster WITH stats for importance calculation
     roster = fetch_team_roster_with_stats(team_abbrev)
-    roster_names = {p['name'].lower(): p for p in roster}
-    
-    impact_score = 0
+    roster_lookup = {}
+    for p in roster:
+        key = p['name'].lower().strip()
+        roster_lookup[key] = p
+        # Also index by last name for fuzzy matching
+        parts = key.split()
+        if len(parts) >= 2:
+            roster_lookup[parts[-1]] = p
+
+    impact_score = 0.0
     key_injuries = []
     positions_affected = {'F': 0, 'D': 0, 'G': 0}
-    
+    injury_details = []
+
     for injury in injuries:
-        player_name = injury['player'].lower()
-        position = injury.get('position', 'F')[0].upper()  # First letter
-        status = injury.get('status', '').lower()
-        
-        # Find player in roster
+        player_name = injury['player'].strip()
+        player_lower = player_name.lower()
+        raw_position = injury.get('position', 'F')
+        position = raw_position[0].upper() if raw_position else 'F'
+        if position not in ('F', 'D', 'G'):
+            position = 'F'
+        status = injury.get('status', '').lower().strip()
+
+        # ── Find player in roster (fuzzy matching) ────────────────────
         player_info = None
-        for roster_name, roster_player in roster_names.items():
-            if player_name in roster_name or roster_name in player_name:
-                player_info = roster_player
-                break
-        
-        # Calculate importance
+        # Try exact match first
+        if player_lower in roster_lookup:
+            player_info = roster_lookup[player_lower]
+        else:
+            # Try last name match
+            last_name = player_lower.split()[-1] if player_lower.split() else ""
+            if last_name and last_name in roster_lookup:
+                player_info = roster_lookup[last_name]
+            else:
+                # Try substring match
+                for roster_name, roster_player in roster_lookup.items():
+                    if (player_lower in roster_name or roster_name in player_lower):
+                        player_info = roster_player
+                        break
+
+        # ── Calculate importance from real stats ──────────────────────
         if player_info:
-            importance = calculate_player_importance(player_info)
+            importance = calculate_player_importance(player_info, roster)
+            # Use roster position if available (more accurate than injury report)
+            if player_info.get('position'):
+                position = player_info['position']
         else:
-            # Default importance by position
-            importance = 10 if position == 'G' else 7 if position == 'D' else 6
-        
-        # Weight by status severity
-        if 'out' in status or 'ir' in status or 'ltir' in status:
-            severity_multiplier = 1.0
-        elif 'day-to-day' in status or 'dtd' in status or 'questionable' in status:
-            severity_multiplier = 0.5
-        elif 'doubtful' in status:
-            severity_multiplier = 0.7
-        else:
-            severity_multiplier = 0.3
-        
-        player_impact = importance * severity_multiplier
+            # Player not found in roster — likely AHL call-up or roster churn
+            # Give LOW importance since they're not in the NHL stats
+            importance = 1.5
+
+        # ── Severity multiplier ───────────────────────────────────────
+        severity = 0.3  # default (probable/unknown)
+        for key_status, mult in sev_multipliers.items():
+            if key_status in status:
+                severity = mult
+                break
+
+        # ── Position multiplier from coefficients ─────────────────────
+        pos_mult = pos_multipliers.get(position, 1.0)
+
+        # ── Per-player impact ─────────────────────────────────────────
+        player_impact = importance * severity * pos_mult
         impact_score += player_impact
-        
-        # Track key injuries (importance >= 7)
-        if importance >= 7 and severity_multiplier >= 0.5:
+
+        # Track details
+        detail = {
+            'player': player_name,
+            'position': position,
+            'importance': importance,
+            'severity': severity,
+            'pos_mult': pos_mult,
+            'impact': round(player_impact, 2),
+            'status': injury.get('status', 'Unknown'),
+            'found_in_roster': player_info is not None,
+        }
+        injury_details.append(detail)
+
+        # Track key injuries (importance >= 6 and definitely out)
+        if importance >= 6 and severity >= 0.5:
             key_injuries.append({
-                'player': injury['player'],
+                'player': player_name,
                 'position': position,
                 'importance': importance,
-                'status': injury['status']
+                'status': injury.get('status', 'Unknown'),
+                'impact': round(player_impact, 2),
             })
-        
+
         # Track positions
         if position in positions_affected:
             positions_affected[position] += 1
-    
-    # Cap impact score at 10
-    impact_score = min(10, impact_score)
-    
+
+    # Sort key injuries by impact (most impactful first)
+    key_injuries.sort(key=lambda x: x['impact'], reverse=True)
+    injury_details.sort(key=lambda x: x['impact'], reverse=True)
+
     return {
         'impact_score': round(impact_score, 1),
         'key_injuries': key_injuries,
         'total_injuries': len(injuries),
-        'positions_affected': positions_affected
+        'positions_affected': positions_affected,
+        'injury_details': injury_details,
     }
 
 

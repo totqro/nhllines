@@ -50,11 +50,30 @@ jobs:
         run: mkdir -p data ml_models cache build/nhllines
 
       - name: Run NHL analysis
-        run: python main.py --stake 0.50
+        run: python main.py --stake 0.50 --conservative
 
       - name: Check and update bet results
-        run: python -c "from src.analysis.bet_tracker import check_results; check_results(days_back=7)"
-        continue-on-error: true
+        run: |
+          python -c "
+          from src.analysis.bet_tracker import check_results
+          check_results(days_back=14)
+          "
+
+      - name: Verify performance data updated
+        run: |
+          echo "=== Data file status ==="
+          ls -la data/bet_results.json data/analysis_history.json data/latest_analysis.json 2>/dev/null || true
+          python -c "
+          import json
+          br = json.load(open('data/bet_results.json'))
+          results = br.get('results', {})
+          dates = sorted([v.get('checked_at','')[:10] for v in results.values() if v.get('checked_at')], reverse=True)
+          print(f'Tracked bets: {len(results)}')
+          print(f'Most recent check: {dates[0] if dates else \"none\"}')
+          won = sum(1 for v in results.values() if v.get('result') == 'won')
+          lost = sum(1 for v in results.values() if v.get('result') == 'lost')
+          print(f'Record: {won}W-{lost}L')
+          "
 
       - name: Build deploy folder
         run: |
@@ -85,10 +104,26 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage all data files
           git add data/bet_results.json data/analysis_history.json data/latest_analysis.json
-          git diff --cached --quiet || git commit -m "chore: update NHL data [$(date +'%Y-%m-%d')]"
-          git push
-        continue-on-error: true
+
+          # Only commit+push if there are changes
+          if git diff --cached --quiet; then
+            echo "No data changes to commit"
+          else
+            git commit -m "chore: update NHL data [$(date +'%Y-%m-%d %H:%M')]"
+
+            # Pull with rebase to handle any concurrent commits
+            git pull --rebase origin main || {
+              echo "::warning::Rebase failed, trying merge strategy"
+              git rebase --abort 2>/dev/null || true
+              git pull --no-rebase -X theirs origin main
+            }
+
+            git push
+            echo "✅ Data committed and pushed to repo"
+          fi
 
       - name: Save ML models
         uses: actions/upload-artifact@v4

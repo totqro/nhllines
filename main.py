@@ -23,7 +23,10 @@ import argparse
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# EST = UTC-4 (simple fixed offset, close enough for display purposes)
+EST = timezone(timedelta(hours=-4))
 from pathlib import Path
 
 from src.data import (
@@ -77,7 +80,7 @@ def run_analysis(
     print("  NHL +EV Betting Finder")
     if conservative:
         print("  MODE: Conservative (moneylines + totals only, 3%+ edge)")
-    print(f"  {datetime.now().strftime('%A, %B %d %Y %H:%M')}")
+    print(f"  {datetime.now(EST).strftime('%A, %B %d %Y %H:%M')} EST")
     print("=" * 60)
     print()
 
@@ -178,7 +181,6 @@ def run_analysis(
             odds_games = parse_odds(raw_odds)
             
             # Filter out live/finished games
-            from datetime import timedelta, timezone
             now_utc = datetime.now(timezone.utc)
             
             pre_game_only = []
@@ -496,14 +498,14 @@ def run_analysis(
                 elif goalie_status_text:
                     goalie_context = f" [Goalies{goalie_status_text}]"
             
-            # Add injury context
+            # Add injury context (threshold raised: new scale is 0-30+, not 0-10)
             injury_context = ""
-            if home_injury_impact['impact_score'] > 3 or away_injury_impact['impact_score'] > 3:
+            if home_injury_impact['impact_score'] > 5 or away_injury_impact['impact_score'] > 5:
                 injury_parts = []
-                if home_injury_impact['impact_score'] > 3:
-                    injury_parts.append(f"{home} -{home_injury_impact['impact_score']:.0f}")
-                if away_injury_impact['impact_score'] > 3:
-                    injury_parts.append(f"{away} -{away_injury_impact['impact_score']:.0f}")
+                if home_injury_impact['impact_score'] > 5:
+                    injury_parts.append(f"{home} -{home_injury_impact['impact_score']:.1f}")
+                if away_injury_impact['impact_score'] > 5:
+                    injury_parts.append(f"{away} -{away_injury_impact['impact_score']:.1f}")
                 if injury_parts:
                     injury_context = f" [Injuries: {', '.join(injury_parts)}]"
             
@@ -626,18 +628,18 @@ def run_analysis(
                         "severity": "positive"
                     })
             
-            # Injury indicators
-            if home_injury_impact['impact_score'] > 3:
+            # Injury indicators (new scale: 0-30+, meaningful threshold ~5)
+            if home_injury_impact['impact_score'] > 5:
                 context_indicators["injuries"].append({
                     "team": home,
                     "impact": home_injury_impact['impact_score'],
-                    "severity": "negative"
+                    "severity": "high" if home_injury_impact['impact_score'] > 12 else "negative"
                 })
-            if away_injury_impact['impact_score'] > 3:
+            if away_injury_impact['impact_score'] > 5:
                 context_indicators["injuries"].append({
                     "team": away,
                     "impact": away_injury_impact['impact_score'],
-                    "severity": "negative"
+                    "severity": "high" if away_injury_impact['impact_score'] > 12 else "negative"
                 })
             
             # Home/road split indicators
@@ -787,7 +789,7 @@ def run_analysis(
 
     # Save results
     output = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(EST).isoformat(),
         "stake": stake,
         "days_back": days_back,
         "min_edge": min_edge,

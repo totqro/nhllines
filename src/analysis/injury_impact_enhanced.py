@@ -70,20 +70,23 @@ def calculate_injury_win_prob_adjustment(home_injuries: list, away_injuries: lis
     
     # Net impact (positive = home more injured)
     net_impact = home_score - away_score
-    
+
     # Win probability adjustment
     # Negative net_impact = home team less injured = positive adjustment
-    win_prob_adjustment = -net_impact * coef
-    
+    # Scale coefficient for new wider range (0-30+ instead of 0-10)
+    # Divide by 3 to keep adjustments proportional to old behavior
+    scaled_coef = coef / 3.0
+    win_prob_adjustment = -net_impact * scaled_coef
+
     # Cap adjustment at ±20%
     win_prob_adjustment = max(-0.20, min(0.20, win_prob_adjustment))
-    
-    # Generate explanation
-    if abs(net_impact) < 1:
+
+    # Generate explanation (thresholds adjusted for new 0-30+ scale)
+    if abs(net_impact) < 3:
         explanation = "Injuries roughly equal"
-    elif net_impact > 3:
+    elif net_impact > 8:
         explanation = f"{home_team} significantly more injured (-{abs(win_prob_adjustment):.1%})"
-    elif net_impact < -3:
+    elif net_impact < -8:
         explanation = f"{away_team} significantly more injured (+{abs(win_prob_adjustment):.1%})"
     elif net_impact > 0:
         explanation = f"{home_team} more injured ({win_prob_adjustment:+.1%})"
