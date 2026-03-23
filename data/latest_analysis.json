@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-22T21:36:52.377021-04:00",
+  "timestamp": "2026-03-22T21:41:22.545825-04:00",
   "stake": 0.5,
   "days_back": 90,
   "min_edge": 0.02,
@@ -10,9 +10,9 @@
       "home": "NYR",
       "away": "OTT",
       "model_probs": {
-        "home_win_prob": 0.34766839176095565,
-        "away_win_prob": 0.652331601086487,
-        "expected_total": 5.7085734068715475,
+        "home_win_prob": 0.3384970322219236,
+        "away_win_prob": 0.661502982083191,
+        "expected_total": 5.747646053966275,
         "over_prob": 0.48603611660418977,
         "under_prob": 0.5139638833958102,
         "home_cover_prob": 0.448260800763526,
@@ -43,21 +43,21 @@
         "away_win_prob": 0.6248526139454891,
         "over_prob": 0.504777939629702,
         "under_prob": 0.49522206037029803,
-        "spread_home_cover_prob": 0.5864034611202233,
+        "spread_home_cover_prob": 0.5865326100562983,
         "total_line": 6.0,
         "spread_line": 1.5,
         "n_books_ml": 14,
         "n_books_total": 14,
-        "n_books_spread": 13
+        "n_books_spread": 14
       },
       "blended_probs": {
-        "home_win_prob": 0.36169949880305696,
-        "away_win_prob": 0.638300501196943,
+        "home_win_prob": 0.35721114643812435,
+        "away_win_prob": 0.6427888535618757,
         "over_prob": 0.4956059182579845,
         "under_prob": 0.5043940817420155,
-        "home_cover_prob": 0.36169949880305696,
-        "away_cover_prob": 0.4676808158004484,
-        "expected_total": 5.7085734068715475,
+        "home_cover_prob": 0.35721114643812435,
+        "away_cover_prob": 0.4676022300054383,
+        "expected_total": 5.747646053966275,
         "model_confidence": 0.42679527840489717,
         "effective_model_weight": 0.489387897817201
       },
@@ -384,14 +384,14 @@
   "recommendations": [],
   "quota_info": {
     "total_keys": 3,
-    "total_remaining": 1122,
-    "total_used": 378,
+    "total_remaining": 1116,
+    "total_used": 384,
     "keys": [
       {
         "index": 0,
-        "used": 378,
-        "remaining": 122,
-        "last_updated": "2026-03-23T01:36:51.813203"
+        "used": 384,
+        "remaining": 116,
+        "last_updated": "2026-03-23T01:41:21.542928"
       },
       {
         "index": 1,
