@@ -5,11 +5,22 @@ Saves all analysis outputs, removes duplicates, and maintains 30-day rolling his
 
 import json
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 HISTORY_PATH = Path(__file__).parent.parent.parent / "data" / "analysis_history.json"
 MAX_DAYS = 30
+
+# EST = UTC-4
+EST = timezone(timedelta(hours=-4))
+
+
+def _parse_timestamp(ts_str: str) -> datetime:
+    """Parse a timestamp string, treating naive timestamps as EST."""
+    dt = datetime.fromisoformat(ts_str)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=EST)
+    return dt
 
 
 def save_analysis(analysis_data: dict):
@@ -26,11 +37,11 @@ def save_analysis(analysis_data: dict):
     else:
         history = {"analyses": []}
     
-    # Add timestamp if not present
+    # Add timestamp if not present (EST)
     if "timestamp" not in analysis_data:
-        analysis_data["timestamp"] = datetime.now().isoformat()
-    
-    new_timestamp = datetime.fromisoformat(analysis_data["timestamp"])
+        analysis_data["timestamp"] = datetime.now(EST).isoformat()
+
+    new_timestamp = _parse_timestamp(analysis_data["timestamp"])
     
     # Create a signature for this analysis based on recommendations
     def get_analysis_signature(analysis):
@@ -47,11 +58,11 @@ def save_analysis(analysis_data: dict):
     new_sig = get_analysis_signature(analysis_data)
     
     # Remove duplicates and old entries
-    cutoff_date = datetime.now() - timedelta(days=MAX_DAYS)
+    cutoff_date = datetime.now(EST) - timedelta(days=MAX_DAYS)
     filtered = []
-    
+
     for existing in history["analyses"]:
-        existing_time = datetime.fromisoformat(existing["timestamp"])
+        existing_time = _parse_timestamp(existing["timestamp"])
         
         # Skip if too old
         if existing_time < cutoff_date:
@@ -76,7 +87,7 @@ def save_analysis(analysis_data: dict):
     
     # Save
     history["analyses"] = filtered
-    history["last_updated"] = datetime.now().isoformat()
+    history["last_updated"] = datetime.now(EST).isoformat()
     history["total_analyses"] = len(filtered)
     
     HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -104,17 +115,22 @@ def get_all_bets_from_history(days_back: int = 30):
         return []
     
     history = json.loads(HISTORY_PATH.read_text())
-    cutoff = datetime.now() - timedelta(days=days_back)
-    
+    cutoff = datetime.now(EST) - timedelta(days=days_back)
+
     all_bets = []
     for analysis in history["analyses"]:
-        analysis_time = datetime.fromisoformat(analysis["timestamp"])
+        analysis_time = _parse_timestamp(analysis["timestamp"])
         if analysis_time < cutoff:
             continue
         
         # Extract bets from recommendations
         if "recommendations" in analysis:
             for bet in analysis["recommendations"]:
+                # Skip .0 total lines — they can push and shouldn't be tracked
+                if bet.get("bet_type") == "Total":
+                    line = float(bet["pick"].split()[1])
+                    if line == int(line):
+                        continue
                 # Add analysis timestamp to bet
                 bet_with_time = {**bet, "analysis_timestamp": analysis["timestamp"]}
                 all_bets.append(bet_with_time)
@@ -133,10 +149,10 @@ def get_history_stats(days_back: int = 30):
         return None
     
     history = json.loads(HISTORY_PATH.read_text())
-    cutoff = datetime.now() - timedelta(days=days_back)
-    
-    recent = [a for a in history["analyses"] 
-              if datetime.fromisoformat(a["timestamp"]) >= cutoff]
+    cutoff = datetime.now(EST) - timedelta(days=days_back)
+
+    recent = [a for a in history["analyses"]
+              if _parse_timestamp(a["timestamp"]) >= cutoff]
     
     if not recent:
         return None
@@ -145,7 +161,7 @@ def get_history_stats(days_back: int = 30):
     total_games = sum(len(a.get("games_analyzed", [])) for a in recent)
     
     # Get date range
-    timestamps = [datetime.fromisoformat(a["timestamp"]) for a in recent]
+    timestamps = [_parse_timestamp(a["timestamp"]) for a in recent]
     oldest = min(timestamps)
     newest = max(timestamps)
     

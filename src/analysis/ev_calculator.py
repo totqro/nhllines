@@ -232,6 +232,9 @@ def evaluate_all_bets(
     for book, side, point, price in all_total_lines:
         if not _book_allowed(book):
             continue
+        # Skip .0 lines — they can push (refund), which the EV calc doesn't account for
+        if point == int(point):
+            continue
         # Calculate Poisson-based probability for this specific line
         poisson_over = _poisson_over_prob(expected_total, point)
 

@@ -69,7 +69,7 @@ function displayPerformance(results, history) {
         return;
     }
 
-    const resolvedBets = Object.values(results.results);
+    const resolvedBets = Object.values(results.results).filter(r => r.result !== 'push');
     const wonBets = resolvedBets.filter(r => r.result === 'won');
     const totalBets = resolvedBets.length;
     const winRate = (wonBets.length / totalBets * 100).toFixed(1);
@@ -148,7 +148,7 @@ function displayRecentResults(resolvedBets) {
     container.innerHTML = sorted.slice(0, 20).map(r => {
         const grade = getGrade(r.bet.edge);
         const gc = getGradeClass(grade);
-        const icon = r.result === 'won' ? '✅' : '❌';
+        const icon = r.result === 'won' ? '✅' : r.result === 'push' ? '➖' : '❌';
         const betDate = new Date(r.bet.analysis_timestamp || r.checked_at);
         const dateStr = betDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         return `

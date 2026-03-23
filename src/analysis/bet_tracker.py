@@ -6,7 +6,10 @@ Uses analysis_history.json as the source of truth for all bets.
 
 import json
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# EST = UTC-4
+EST = timezone(timedelta(hours=-4))
 from src.data.nhl_data import fetch_season_games
 from src.analysis.analysis_history import get_all_bets_from_history
 
@@ -74,26 +77,31 @@ def check_results(days_back: int = 7):
             continue
         
         result = game_results[game_key]
-        won = _check_bet_result(bet, result)
-        
-        if won is None:
+        outcome = _check_bet_result(bet, result)
+
+        if outcome is None:
             continue
-        
+
         # Calculate profit/loss
-        if won:
+        if outcome == "push":
+            profit = 0.0
+            result_label = "push"
+        elif outcome:
             from src.data.odds_fetcher import american_to_decimal
             decimal_odds = american_to_decimal(bet["odds"])
             profit = bet["stake"] * (decimal_odds - 1)
+            result_label = "won"
         else:
             profit = -bet["stake"]
-        
+            result_label = "lost"
+
         # Store result
         results_log["results"][bet_id] = {
             "bet": bet,
-            "result": "won" if won else "lost",
+            "result": result_label,
             "profit": profit,
             "game_result": result,
-            "checked_at": datetime.now().isoformat(),
+            "checked_at": datetime.now(EST).isoformat(),
         }
         
         updated += 1
@@ -113,47 +121,56 @@ def _print_performance_summary_from_results(results: dict):
     if not results:
         print("\nNo resolved bets yet.")
         return
-    
+
     resolved = list(results.values())
     won = [r for r in resolved if r["result"] == "won"]
     lost = [r for r in resolved if r["result"] == "lost"]
-    
+
     total_staked = sum(r["bet"]["stake"] for r in resolved)
     total_profit = sum(r["profit"] for r in resolved)
     roi = (total_profit / total_staked) if total_staked > 0 else 0
 
+    print(f"\n📊 Performance: {len(won)}W-{len(lost)}L "
+          f"({len(won)/len(resolved):.1%}) | "
+          f"Staked: ${total_staked:.2f} | "
+          f"Profit: ${total_profit:+.2f} | ROI: {roi:+.1%}")
 
-def _check_bet_result(bet: dict, result: dict) -> bool:
+
+def _check_bet_result(bet: dict, result: dict):
     """
     Check if a bet won based on the actual game result.
-    
+
     Returns:
-        bool: True if bet won, False if lost
+        True if won, False if lost, "push" if line lands exactly
     """
     pick = bet["pick"]
     bet_type = bet["bet_type"]
-    
+
     if bet_type == "Moneyline":
         # Extract team from pick (e.g., "TOR ML" -> "TOR")
         team = pick.split(" ")[0]
         game = bet["game"]
-        
+
         if team in game.split(" @ ")[0]:  # Away team
             return result["away_won"]
         else:  # Home team
             return result["home_won"]
-    
+
     elif bet_type == "Total":
         # Extract over/under and line (e.g., "Over 6.5" or "Under 5.5")
         parts = pick.split(" ")
         over_under = parts[0].lower()
         line = float(parts[1])
-        
+
+        # Push: total lands exactly on a whole-number line
+        if result["total"] == line:
+            return "push"
+
         if over_under == "over":
             return result["total"] > line
         else:  # under
             return result["total"] < line
-    
+
     elif bet_type == "Spread":
         # More complex - would need to parse spread
         # For now, return None (not implemented)
