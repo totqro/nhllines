@@ -51,6 +51,7 @@ jobs:
 
       - name: Run NHL analysis
         run: python main.py --stake 0.50 --conservative
+        continue-on-error: true
 
       - name: Check and update bet results
         run: |
@@ -58,6 +59,7 @@ jobs:
           from src.analysis.bet_tracker import check_results
           check_results(days_back=14)
           "
+        continue-on-error: true
 
       - name: Verify performance data updated
         run: |
