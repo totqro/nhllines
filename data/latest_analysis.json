@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-22T21:41:22.545825-04:00",
+  "timestamp": "2026-03-23T16:58:44.633201-04:00",
   "stake": 0.5,
   "days_back": 90,
   "min_edge": 0.02,
@@ -10,9 +10,9 @@
       "home": "NYR",
       "away": "OTT",
       "model_probs": {
-        "home_win_prob": 0.3384970322219236,
-        "away_win_prob": 0.661502982083191,
-        "expected_total": 5.747646053966275,
+        "home_win_prob": 0.3391482940284117,
+        "away_win_prob": 0.6608516988190309,
+        "expected_total": 5.6038267790639305,
         "over_prob": 0.48603611660418977,
         "under_prob": 0.5139638833958102,
         "home_cover_prob": 0.448260800763526,
@@ -39,25 +39,25 @@
         }
       },
       "market_probs": {
-        "home_win_prob": 0.37514738605451087,
-        "away_win_prob": 0.6248526139454891,
-        "over_prob": 0.504777939629702,
-        "under_prob": 0.49522206037029803,
-        "spread_home_cover_prob": 0.5865326100562983,
+        "home_win_prob": 0.3685707029784529,
+        "away_win_prob": 0.6314292970215472,
+        "over_prob": 0.5061356676584344,
+        "under_prob": 0.49386433234156557,
+        "spread_home_cover_prob": 0.5825291160980675,
         "total_line": 6.0,
         "spread_line": 1.5,
-        "n_books_ml": 14,
-        "n_books_total": 14,
-        "n_books_spread": 14
+        "n_books_ml": 15,
+        "n_books_total": 15,
+        "n_books_spread": 15
       },
       "blended_probs": {
-        "home_win_prob": 0.35721114643812435,
-        "away_win_prob": 0.6427888535618757,
-        "over_prob": 0.4956059182579845,
-        "under_prob": 0.5043940817420155,
-        "home_cover_prob": 0.35721114643812435,
-        "away_cover_prob": 0.4676022300054383,
-        "expected_total": 5.747646053966275,
+        "home_win_prob": 0.35417173211367425,
+        "away_win_prob": 0.6458282678863257,
+        "over_prob": 0.4962991906209281,
+        "under_prob": 0.5037008093790719,
+        "home_cover_prob": 0.35417173211367425,
+        "away_cover_prob": 0.47003831476995517,
+        "expected_total": 5.6038267790639305,
         "model_confidence": 0.42679527840489717,
         "effective_model_weight": 0.489387897817201
       },
@@ -69,7 +69,7 @@
         "injuries": [
           {
             "team": "NYR",
-            "impact": 5.8,
+            "impact": 5.9,
             "severity": "negative"
           },
           {
@@ -113,7 +113,7 @@
       },
       "injuries": {
         "home": {
-          "impact_score": 5.8,
+          "impact_score": 5.9,
           "key_injuries": [],
           "total_injuries": 11,
           "positions_affected": {
@@ -129,7 +129,7 @@
               "severity": 0.3,
               "pos_mult": 1.5,
               "impact": 0.67,
-              "status": "Mar 23",
+              "status": "Mar 25",
               "found_in_roster": false
             },
             {
@@ -139,7 +139,7 @@
               "severity": 0.3,
               "pos_mult": 1.5,
               "impact": 0.67,
-              "status": "Mar 23",
+              "status": "Mar 25",
               "found_in_roster": false
             },
             {
@@ -193,6 +193,16 @@
               "found_in_roster": false
             },
             {
+              "player": "Matt Rempe",
+              "position": "F",
+              "importance": 1.5,
+              "severity": 0.3,
+              "pos_mult": 1.0,
+              "impact": 0.45,
+              "status": "Sep 15",
+              "found_in_roster": false
+            },
+            {
               "player": "Noah Laba",
               "position": "F",
               "importance": 1.5,
@@ -209,7 +219,7 @@
               "severity": 0.3,
               "pos_mult": 1.0,
               "impact": 0.45,
-              "status": "Mar 29",
+              "status": "Sep 15",
               "found_in_roster": false
             },
             {
@@ -220,16 +230,6 @@
               "pos_mult": 1.0,
               "impact": 0.45,
               "status": "Apr 11",
-              "found_in_roster": false
-            },
-            {
-              "player": "Matt Rempe",
-              "position": "F",
-              "importance": 1.5,
-              "severity": 0.3,
-              "pos_mult": 1.0,
-              "impact": 0.45,
-              "status": "Mar 29",
               "found_in_roster": false
             }
           ]
@@ -384,14 +384,14 @@
   "recommendations": [],
   "quota_info": {
     "total_keys": 3,
-    "total_remaining": 1116,
-    "total_used": 384,
+    "total_remaining": 1110,
+    "total_used": 390,
     "keys": [
       {
         "index": 0,
-        "used": 384,
-        "remaining": 116,
-        "last_updated": "2026-03-23T01:41:21.542928"
+        "used": 390,
+        "remaining": 110,
+        "last_updated": "2026-03-23T20:58:44.010422"
       },
       {
         "index": 1,
