@@ -16,10 +16,12 @@ EST = timezone(timedelta(hours=-4))
 
 
 def _parse_timestamp(ts_str: str) -> datetime:
-    """Parse a timestamp string, treating naive timestamps as EST."""
+    """Parse a timestamp string, normalizing everything to EST."""
     dt = datetime.fromisoformat(ts_str)
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=EST)
+    else:
+        dt = dt.astimezone(EST)
     return dt
 
 
