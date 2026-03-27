@@ -77,19 +77,32 @@ jobs:
           print(f'Record: {won}W-{lost}L')
           "
 
+      - name: Fetch MLB files from projects repo
+        run: |
+          git clone --depth 1 https://github.com/totqro/projects.git /tmp/projects 2>/dev/null || true
+
       - name: Build deploy folder
         run: |
-          mkdir -p build/nhllines
-          # Root hub page (always rebuilt from source)
+          mkdir -p build/nhllines build/mlblines
+          # Root hub page
           cp web/hub.html build/index.html
           # NHL app files
           cp web/index.html build/nhllines/
           cp web/app.js build/nhllines/
           cp web/styles.css build/nhllines/
-          # Data files (with fallbacks)
+          # NHL data files (with fallbacks)
           cp data/latest_analysis.json build/nhllines/ 2>/dev/null || echo '{"recommendations":[],"games_analyzed":[],"timestamp":""}' > build/nhllines/latest_analysis.json
           cp data/bet_results.json build/nhllines/ 2>/dev/null || echo '{"results":{}}' > build/nhllines/bet_results.json
           cp data/analysis_history.json build/nhllines/ 2>/dev/null || true
+          # MLB app + data files from projects repo
+          if [ -d /tmp/projects/mlblines ]; then
+            cp /tmp/projects/mlblines/web/index.html build/mlblines/
+            cp /tmp/projects/mlblines/web/app.js build/mlblines/
+            cp /tmp/projects/mlblines/web/styles.css build/mlblines/
+            cp /tmp/projects/mlblines/mlbdata/latest_analysis.json build/mlblines/ 2>/dev/null || echo '{"recommendations":[],"games_analyzed":[],"timestamp":""}' > build/mlblines/latest_analysis.json
+            cp /tmp/projects/mlblines/mlbdata/bet_results.json build/mlblines/ 2>/dev/null || echo '{"results":{}}' > build/mlblines/bet_results.json
+            cp /tmp/projects/mlblines/mlbdata/analysis_history.json build/mlblines/ 2>/dev/null || true
+          fi
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
@@ -120,7 +133,7 @@ jobs:
             git pull --rebase origin main || {
               echo "::warning::Rebase failed, trying merge strategy"
               git rebase --abort 2>/dev/null || true
-              git pull --no-rebase -X theirs origin main
+              git pull --no-rebase -X ours origin main
             }
 
             git push
