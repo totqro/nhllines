@@ -185,7 +185,7 @@ function renderProfitChart(bets,sp=0,se=0) {
         cp+=r.profit; ce+=r.bet.stake*r.bet.edge;
         const d=new Date(r.bet.analysis_timestamp||r.checked_at);
         labels.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
-        betDates.push(d.toISOString().slice(0,10));
+        betDates.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));
         pd.push(+cp.toFixed(2)); ed.push(+ce.toFixed(2));
         colors.push(r.result==='won'?'#00C896':'#FF4D6A');
     });
